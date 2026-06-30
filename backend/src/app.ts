@@ -1,3 +1,4 @@
+import path from "path";
 import cors from "cors";
 import express from "express";
 import { auth } from "@/config/auth";
@@ -8,6 +9,8 @@ import { skillGapRoutes } from "@/features/skill-gap-analysis";
 import { userRoutes } from "@/features/users";
 import githubRoutes from "@/features/users/routes/github-routes";
 import resumeRoutes from "@/features/users/routes/resume-routes";
+import { chatbotRoutes } from "@/features/chatbot";
+import { roadmapRoutes } from "@/features/roadmap-generator";
 import { refreshMarketProfilesController } from "@/features/recommendations/controllers/admin-market-controller";
 import { authenticateToken } from "@/middleware/authenticate";
 import { requireRole } from "@/middleware/rbac";
@@ -96,6 +99,14 @@ app.use("/api/skill-gap", skillGapRoutes);
 app.use("/api/assessment", assessmentRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/admin/resources", adminResourceRoutes);
+app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/roadmap", roadmapRoutes);
+
+const frontendDist = path.join(__dirname, "../../frontend/dist");
+app.use(express.static(frontendDist));
+app.get("*", (_req, res) => {
+	res.sendFile(path.join(frontendDist, "index.html"));
+});
 
 const adminMarketRouter = express.Router();
 adminMarketRouter.use(authenticateToken);

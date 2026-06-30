@@ -20,4 +20,8 @@ export const queryKeys = {
   githubAnalysis: ["github", "analysis"] as const,
   resources: ["recommendations"] as const,
   resourceSnapshot: ["recommendations", "snapshot"] as const,
+  chatSessions: ["chatbot", "sessions"] as const,
+  chatMessages: (sessionId: string) => ["chatbot", "messages", sessionId] as const,
+  roadmaps: ["roadmap", "list"] as const,
+  roadmapDetail: (id: string) => ["roadmap", "detail", id] as const,
 };

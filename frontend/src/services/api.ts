@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+const rawUrl = import.meta.env.VITE_API_URL;
+const API_BASE_URL = rawUrl && rawUrl !== "" ? rawUrl : "";
 
 export function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem("auth_token");
@@ -280,6 +281,158 @@ export async function triggerFullAnalysis(input: TriggerAnalysisInput) {
     throw new Error(err.error || "Failed to trigger full analysis");
   }
   return response.json();
+}
+
+// ─── Chatbot ──────────────────────────────────────────────────────────────────
+
+export async function createChatSession(title?: string) {
+  const response = await fetch(`${API_BASE_URL}/api/chatbot/sessions`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ title }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to create session");
+  }
+  return response.json();
+}
+
+export async function getChatSessions() {
+  const response = await fetch(`${API_BASE_URL}/api/chatbot/sessions`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to fetch sessions");
+  }
+  return response.json() as Promise<{ sessions: { id: string; title: string; messageCount: number; lastMessageAt: string; createdAt: string }[] }>;
+}
+
+export async function getSessionMessages(sessionId: string) {
+  const response = await fetch(`${API_BASE_URL}/api/chatbot/sessions/${sessionId}/messages`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to fetch messages");
+  }
+  return response.json() as Promise<{ messages: { id: string; sessionId: string; role: "user" | "assistant"; content: string; createdAt: string }[] }>;
+}
+
+export async function sendChatMessage(
+  sessionId: string,
+  content: string,
+  fileData?: { base64: string; mimeType: string; fileName: string } | null
+) {
+  const response = await fetch(`${API_BASE_URL}/api/chatbot/messages`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ sessionId, content, fileData: fileData || undefined }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to send message");
+  }
+  return response.json() as Promise<{
+    message: { id: string; sessionId: string; role: "user"; content: string; createdAt: string };
+    reply: { id: string; sessionId: string; role: "assistant"; content: string; createdAt: string };
+  }>;
+}
+
+export async function deleteChatSession(sessionId: string) {
+  const response = await fetch(`${API_BASE_URL}/api/chatbot/sessions/${sessionId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to delete session");
+  }
+}
+
+// ─── Roadmap Generator ────────────────────────────────────────────────────────
+
+export interface RoadmapPhase {
+	id: string;
+	label: string;
+	duration: string;
+	description: string;
+	skills: string[];
+	milestones: string[];
+	resources: { label: string; url: string }[];
+	status: "locked" | "available" | "in_progress" | "completed";
+	order: number;
+}
+
+export interface RoadmapResponse {
+	id: string;
+	title: string;
+	goal: string;
+	duration: string;
+	phases: RoadmapPhase[];
+	progress: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export async function generateRoadmap(goal: string, source: "ai" | "structured" = "ai") {
+	const response = await fetch(`${API_BASE_URL}/api/roadmap/generate`, {
+		method: "POST",
+		headers: getAuthHeaders(),
+		body: JSON.stringify({ goal, source }),
+	});
+	if (!response.ok) {
+		const err = await response.json().catch(() => ({}));
+		throw new Error(err.error || "Failed to generate roadmap");
+	}
+	return response.json() as Promise<RoadmapResponse>;
+}
+
+export async function getRoadmaps() {
+	const response = await fetch(`${API_BASE_URL}/api/roadmap`, {
+		headers: getAuthHeaders(),
+	});
+	if (!response.ok) {
+		const err = await response.json().catch(() => ({}));
+		throw new Error(err.error || "Failed to fetch roadmaps");
+	}
+	return response.json() as Promise<{ roadmaps: RoadmapResponse[] }>;
+}
+
+export async function getRoadmapById(roadmapId: string) {
+	const response = await fetch(`${API_BASE_URL}/api/roadmap/${roadmapId}`, {
+		headers: getAuthHeaders(),
+	});
+	if (!response.ok) {
+		const err = await response.json().catch(() => ({}));
+		throw new Error(err.error || "Failed to fetch roadmap");
+	}
+	return response.json() as Promise<RoadmapResponse>;
+}
+
+export async function updatePhaseStatus(roadmapId: string, phaseId: string, status: RoadmapPhase["status"]) {
+	const response = await fetch(`${API_BASE_URL}/api/roadmap/${roadmapId}/phase`, {
+		method: "PATCH",
+		headers: getAuthHeaders(),
+		body: JSON.stringify({ phaseId, status }),
+	});
+	if (!response.ok) {
+		const err = await response.json().catch(() => ({}));
+		throw new Error(err.error || "Failed to update phase");
+	}
+	return response.json() as Promise<RoadmapResponse>;
+}
+
+export async function deleteRoadmap(roadmapId: string) {
+	const response = await fetch(`${API_BASE_URL}/api/roadmap/${roadmapId}`, {
+		method: "DELETE",
+		headers: getAuthHeaders(),
+	});
+	if (!response.ok) {
+		const err = await response.json().catch(() => ({}));
+		throw new Error(err.error || "Failed to delete roadmap");
+	}
 }
 
 // ─── Career Goals ────────────────────────────────────────────────────────────

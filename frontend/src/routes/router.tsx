@@ -11,6 +11,10 @@ import AssessmentPage from '@/features/interview-preparation/components/assessme
 import ResourcesPage from '@/routes/resources'
 import AuthCallback from '@/features/authentication/components/auth-callback'
 import GoogleAuthCallback from '@/features/authentication/components/google-auth-callback'
+import RoadmapGeneratorPage from '@/features/roadmap-generator/components/roadmap-generator-page'
+import ChatbotPage from '@/features/chatbot/components/chatbot-page'
+
+
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -80,6 +84,22 @@ const resourcesRoute = createRoute({
   component: ResourcesPage,
 })
 
+
+const roadmapRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/roadmap",
+  component: RoadmapGeneratorPage,
+});
+
+
+
+
+const chatbotRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/chatbot',
+  component: ChatbotPage,
+})
+
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/callback',
@@ -103,8 +123,11 @@ const routeTree = rootRoute.addChildren([
   githubRoute,
   assessmentRoute,
   resourcesRoute,
+  roadmapRoute, 
+  chatbotRoute,
   authCallbackRoute,
   googleAuthCallbackRoute,
+
 ])
 
 export const router = createRouter({ routeTree })

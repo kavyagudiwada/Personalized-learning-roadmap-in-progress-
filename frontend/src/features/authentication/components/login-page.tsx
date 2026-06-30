@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { startGitHubOAuth, startGoogleOAuth } from "../services/oauth";
 
 export default function LoginPage() {
+
+  const [name, setName] = useState("");
+const [email, setEmail] = useState("");
 
   return (
     <div className="min-h-screen flex overflow-hidden bg-[#F8F6E8]">
@@ -92,37 +96,71 @@ export default function LoginPage() {
             <p className="mt-4 text-gray-500">Continue your AI-powered learning journey</p>
           </div>
 
-          <div className="mt-10 space-y-4">
-            {/* Google OAuth */}
-            <button
-              type="button"
-              onClick={startGoogleOAuth}
-              className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 font-semibold"
-            >
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google"
-                className="w-5 h-5"
-              />
-              Continue with Google
-            </button>
+   <div className="mt-8 space-y-5">
+  {/* Full Name */}
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Full Name
+    </label>
+    <input
+      type="text"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      placeholder="Enter your full name"
+      className="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#171C4A]/20 focus:border-[#171C4A]"
+    />
+  </div>
 
-            {/* GitHub OAuth */}
-            <button
-              type="button"
-              onClick={startGitHubOAuth}
-              className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 font-semibold"
-            >
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/25/25231.png"
-                alt="GitHub"
-                className="w-5 h-5"
-              />
-              Continue with GitHub
-            </button>
-          </div>
+  {/* Email */}
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      Email Address
+    </label>
+    <input
+      type="email"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      placeholder="Enter your email address"
+      className="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#171C4A]/20 focus:border-[#171C4A]"
+    />
+  </div>
 
-          <p className="text-center mt-8 text-gray-500 text-sm">
+  {/* OR Divider */}
+  <div className="flex items-center my-4">
+    <div className="flex-1 border-t border-gray-200"></div>
+    <span className="px-3 text-sm text-gray-400 font-medium">OR</span>
+    <div className="flex-1 border-t border-gray-200"></div>
+  </div>
+
+  {/* Google Button */}
+  <button
+    type="button"
+    onClick={startGoogleOAuth}
+    className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition font-semibold"
+  >
+    <img
+      src="https://www.svgrepo.com/show/475656/google-color.svg"
+      alt="Google"
+      className="w-5 h-5"
+    />
+    Continue with Google
+  </button>
+
+  {/* GitHub Button */}
+  <button
+    type="button"
+    onClick={startGitHubOAuth}
+    className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition font-semibold"
+  >
+    <img
+      src="https://cdn-icons-png.flaticon.com/512/25/25231.png"
+      alt="GitHub"
+      className="w-5 h-5"
+    />
+    Continue with GitHub
+  </button>
+</div>
+    <p className="text-center mt-8 text-gray-500 text-sm">
             By signing in, you agree to our terms. Your data is used only to provide LearnFlow
             features.
           </p>
@@ -130,4 +168,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
+} 

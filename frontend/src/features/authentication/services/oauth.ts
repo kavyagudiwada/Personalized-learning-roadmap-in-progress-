@@ -20,6 +20,7 @@ async function startSocialOAuth(provider: "google" | "github") {
         disableRedirect: true,
       }),
     });
+    
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));

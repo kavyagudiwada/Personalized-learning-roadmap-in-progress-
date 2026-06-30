@@ -8,6 +8,13 @@ import {
   getLatestSkillGap,
   getProgressHistory,
   getResourceRecommendations,
+  getChatSessions,
+  getSessionMessages,
+  getRoadmaps,
+  getRoadmapById,
+  generateRoadmap,
+  updatePhaseStatus,
+  deleteRoadmap,
   markResourceComplete,
   getUserProfile,
   syncGithubUsername,
@@ -101,6 +108,72 @@ export function useTriggerFullAnalysis() {
       queryClient.invalidateQueries({ queryKey: queryKeys.resources });
       queryClient.invalidateQueries({ queryKey: queryKeys.resourceSnapshot });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+    },
+  });
+}
+
+export function useChatSessions() {
+  return useQuery({
+    queryKey: queryKeys.chatSessions,
+    queryFn: () => getChatSessions().then((r) => r.sessions),
+    enabled: !!localStorage.getItem("auth_token"),
+  });
+}
+
+export function useSessionMessages(sessionId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.chatMessages(sessionId ?? ""),
+    queryFn: () => getSessionMessages(sessionId!).then((r) => r.messages),
+    enabled: !!sessionId && !!localStorage.getItem("auth_token"),
+  });
+}
+
+export function useRoadmaps() {
+  return useQuery({
+    queryKey: queryKeys.roadmaps,
+    queryFn: () => getRoadmaps().then((r) => r.roadmaps),
+    enabled: !!localStorage.getItem("auth_token"),
+  });
+}
+
+export function useRoadmapDetail(roadmapId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.roadmapDetail(roadmapId ?? ""),
+    queryFn: () => getRoadmapById(roadmapId!),
+    enabled: !!roadmapId && !!localStorage.getItem("auth_token"),
+  });
+}
+
+export function useGenerateRoadmap() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ goal, source }: { goal: string; source?: "ai" | "structured" }) =>
+      generateRoadmap(goal, source),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.roadmaps });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+    },
+  });
+}
+
+export function useUpdatePhase() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roadmapId, phaseId, status }: { roadmapId: string; phaseId: string; status: "locked" | "available" | "in_progress" | "completed" }) =>
+      updatePhaseStatus(roadmapId, phaseId, status),
+    onSuccess: (_data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.roadmaps });
+      queryClient.invalidateQueries({ queryKey: queryKeys.roadmapDetail(_data.id) });
+    },
+  });
+}
+
+export function useDeleteRoadmap() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteRoadmap,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.roadmaps });
     },
   });
 }

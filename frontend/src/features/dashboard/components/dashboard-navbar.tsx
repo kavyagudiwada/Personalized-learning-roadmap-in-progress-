@@ -8,6 +8,8 @@ export default function DashboardNavbar() {
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+const [showRoadmapMenu, setShowRoadmapMenu] = useState(false);
+
 
   const handleLogout = () => {
     logout();
@@ -66,7 +68,45 @@ export default function DashboardNavbar() {
           <button onClick={() => navigate({ to: "/resources" })} className="hover:text-[#171C4A]">
             Resources
           </button>
-        </nav>
+
+          <button onClick={() => navigate({ to: "/chatbot" })} className="hover:text-[#171C4A]">
+            AI Coach
+          </button>
+
+
+        <div className="relative">
+  <button
+    onClick={() => setShowRoadmapMenu(!showRoadmapMenu)}
+className="hover:text-[#171C4A] flex items-center gap-1"
+  >
+    Roadmap
+    <span
+      className={`transition-transform ${
+        showRoadmapMenu ? "rotate-180" : ""
+      }`}
+    >
+      ▼
+    </span>
+  </button>
+
+  {showRoadmapMenu && (
+    <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
+      <button
+        onClick={() => {
+          navigate({ to: "/roadmap" });
+          setShowRoadmapMenu(false);
+        }}
+        className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700 font-medium transition"
+      >
+        Roadmap Generator
+      </button>
+    </div>
+  )}
+</div>
+
+
+</nav>
+
 
         <div className="flex items-center gap-4">
           <div className="relative">
