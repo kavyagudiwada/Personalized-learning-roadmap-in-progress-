@@ -24,17 +24,16 @@ const allowedOrigins = [
 	"http://localhost:3000",
 ];
 
-app.use(
-	cors({
-		origin: (origin, callback) => {
-			if (!origin) return callback(null, true);
-			if (allowedOrigins.includes(origin)) return callback(null, true);
-			callback(new Error(`CORS blocked: ${origin}`));
-		},
-		credentials: true,
-	}),
-);
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://personalized-learning-roadmap-in-progress-di4i-cygt57aqc.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: "15mb" }));
 
 app.all("/api/auth/*", async (req, res) => {
