@@ -14,10 +14,14 @@ async function startSocialOAuth(provider: "google" | "github") {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({
-        provider,
-        callbackURL: `${window.location.origin}/auth/callback`,
-        disableRedirect: true,
+     body: JSON.stringify({
+  provider,
+  callbackURL:
+    provider === "google"
+      ? getGoogleOAuthRedirectUri()
+      : getGitHubOAuthRedirectUri(),
+  disableRedirect: true,
+
       }),
     });
     
