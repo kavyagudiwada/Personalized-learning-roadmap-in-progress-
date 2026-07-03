@@ -29,7 +29,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://personalized-learning-roadmap-in-progress-di4i-cygt57aqc.vercel.app",
+      "personalized-learning-roadmap-in-progress-u8od-16uc5hqjt.vercel.app",
     ],
     credentials: true,
   })
