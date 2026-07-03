@@ -172,6 +172,8 @@ const SKILL_RESOURCES: Record<string, ResourceEntry[]> = {
 			duration: "2 hours",
 			reason: "Visual guide to Flexbox with real-world layout patterns",
 		},
+	],
+	"Tailwind CSS": [
 		{
 			title: "Tailwind CSS Documentation",
 			url: "https://tailwindcss.com/docs",
@@ -180,7 +182,27 @@ const SKILL_RESOURCES: Record<string, ResourceEntry[]> = {
 			difficulty: "beginner",
 			duration: "Varies",
 			reason:
-				"Utility-first CSS framework docs with responsive design examples",
+				"Official Tailwind CSS docs covering utility classes, responsive design, and customization",
+		},
+		{
+			title: "Tailwind CSS From Scratch",
+			url: "https://youtube.com/results?search_query=tailwind+css+from+scratch+full+course",
+			platform: "YouTube",
+			type: "course",
+			difficulty: "beginner",
+			duration: "10 hours",
+			reason:
+				"Complete Tailwind CSS course covering layout, components, and responsive design",
+		},
+		{
+			title: "Build a Dashboard with Tailwind CSS",
+			url: "https://youtube.com/results?search_query=build+dashboard+tailwind+css+tutorial",
+			platform: "YouTube",
+			type: "project",
+			difficulty: "intermediate",
+			duration: "3 hours",
+			reason:
+				"Portfolio project: responsive admin dashboard using Tailwind CSS utility classes",
 		},
 	],
 	HTML: [

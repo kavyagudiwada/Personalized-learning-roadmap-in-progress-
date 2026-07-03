@@ -7,8 +7,13 @@ interface ResumeDetailsProps {
 export default function ResumeDetails({ onBack }: ResumeDetailsProps) {
   const navigate = useNavigate();
 
-  const raw = localStorage.getItem("learnflow_resume_data");
-  const resumeData = raw ? JSON.parse(raw) : null;
+  let resumeData = null;
+  try {
+    const raw = localStorage.getItem("learnflow_resume_data");
+    if (raw) resumeData = JSON.parse(raw);
+  } catch {
+    resumeData = null;
+  }
   const careerGoal = localStorage.getItem("learnflow_career_goal") || "your target role";
 
   const handleBack = () => {

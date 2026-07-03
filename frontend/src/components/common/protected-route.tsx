@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/features/authentication/hooks/use-auth";
 
@@ -5,6 +6,13 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      localStorage.setItem("redirect_after_login", location.pathname);
+      navigate({ to: "/login", replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   if (isLoading) {
     return (
@@ -18,8 +26,6 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }
 
   if (!isAuthenticated) {
-    localStorage.setItem("redirect_after_login", location.pathname);
-    navigate({ to: "/login", replace: true });
     return null;
   }
 

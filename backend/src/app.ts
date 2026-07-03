@@ -11,6 +11,7 @@ import githubRoutes from "@/features/users/routes/github-routes";
 import resumeRoutes from "@/features/users/routes/resume-routes";
 import { chatbotRoutes } from "@/features/chatbot";
 import { roadmapRoutes } from "@/features/roadmap-generator";
+import codeRoutes from "@/features/code-execution/routes/code-routes";
 import { refreshMarketProfilesController } from "@/features/recommendations/controllers/admin-market-controller";
 import { authenticateToken } from "@/middleware/authenticate";
 import { requireRole } from "@/middleware/rbac";
@@ -101,6 +102,7 @@ app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/admin/resources", adminResourceRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/roadmap", roadmapRoutes);
+app.use("/api/code", codeRoutes);
 
 const frontendDist = path.join(__dirname, "../../frontend/dist");
 app.use(express.static(frontendDist));
@@ -117,3 +119,4 @@ app.use("/api/admin/market", adminMarketRouter);
 app.use(errorHandler);
 
 export default app;
+

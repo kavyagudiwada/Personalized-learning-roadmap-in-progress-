@@ -9,6 +9,7 @@ export default function DashboardNavbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
 const [showRoadmapMenu, setShowRoadmapMenu] = useState(false);
+const [showAiCoachMenu, setShowAiCoachMenu] = useState(false);
 
 
   const handleLogout = () => {
@@ -69,9 +70,44 @@ const [showRoadmapMenu, setShowRoadmapMenu] = useState(false);
             Resources
           </button>
 
-          <button onClick={() => navigate({ to: "/chatbot" })} className="hover:text-[#171C4A]">
-            AI Coach
+          <button onClick={() => navigate({ to: "/gamification" })} className="hover:text-[#171C4A]">
+            Gamification
           </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowAiCoachMenu(!showAiCoachMenu)}
+              className="hover:text-[#171C4A] flex items-center gap-1"
+            >
+              AI Coach
+              <span className={`transition-transform ${showAiCoachMenu ? "rotate-180" : ""}`}>
+                ▼
+              </span>
+            </button>
+
+            {showAiCoachMenu && (
+              <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
+                <button
+                  onClick={() => {
+                    navigate({ to: "/chatbot" });
+                    setShowAiCoachMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700 font-medium transition"
+                >
+                  AI Coach
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: "/interview-prep" });
+                    setShowAiCoachMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700 font-medium transition"
+                >
+                  Interview Prep
+                </button>
+              </div>
+            )}
+          </div>
 
 
         <div className="relative">

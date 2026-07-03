@@ -31,7 +31,7 @@ const STATUS_CONFIG: Record<number, { label: string; cls: string; sectionCls: st
   2: { label: "Learn Later", cls: "bg-gray-100 text-gray-500", sectionCls: "border-l-4 border-gray-300 bg-gray-50/30", icon: "⚪" },
 };
 
-export default function ResourceList() {
+export default function ResourceList({ initialSkill }: { initialSkill?: string }) {
   const { data: profile } = useUserProfile();
   const currentGoal = profile?.careerGoal || "";
   const { data, isLoading, error } = useResourceRecommendations(currentGoal);
@@ -40,7 +40,7 @@ export default function ResourceList() {
   const triggerAnalysis = useTriggerFullAnalysis();
   const { data: sgData } = useSkillGapLatest();
   const [filterType, setFilterType] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSkill || "");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   if (isLoading) {

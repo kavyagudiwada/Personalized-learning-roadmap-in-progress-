@@ -5,7 +5,6 @@ import {
   Loader2, Star, Globe, BookOpen, Target, Award, ArrowRight,
   Trash2, Zap, Clock, ChevronRight,
 } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
 import { useRoadmaps, useRoadmapDetail, useGenerateRoadmap, useUpdatePhase, useDeleteRoadmap } from "@/hooks/use-queries";
 import { getUserProfile } from "@/services/api";
 import type { RoadmapPhase, RoadmapResponse } from "@/services/api";
@@ -63,16 +62,15 @@ function NebulaOrbs() {
 function EmptyState({ onGenerate }: { onGenerate: (goal: string, source: "ai" | "structured") => void }) {
   const [goalInput, setGoalInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const navigate = useNavigate();
-
   const { data: profile } = useQuery({
     queryKey: ["user", "profile"],
     queryFn: getUserProfile,
     enabled: !!localStorage.getItem("auth_token"),
+    retry: false,
   });
 
-  const handleGenerate = async (source: "ai" | "structured") => {
-    const goal = goalInput.trim() || profile?.careerGoal || "Frontend Engineer";
+  const handleGenerate = async (source: "ai" | "structured", presetGoal?: string) => {
+    const goal = presetGoal || goalInput.trim() || profile?.careerGoal || "Frontend Engineer";
     setIsGenerating(true);
     try {
       await onGenerate(goal, source);
@@ -141,7 +139,7 @@ function EmptyState({ onGenerate }: { onGenerate: (goal: string, source: "ai" | 
           {presetGoals.map((g) => (
             <button
               key={g}
-              onClick={() => { setGoalInput(g); handleGenerate("ai"); }}
+              onClick={() => { setGoalInput(g); handleGenerate("ai", g); }}
               disabled={isGenerating}
               className="px-4 py-2 bg-white/5 border border-gray-700/50 rounded-lg text-sm text-gray-300 hover:bg-white/10 hover:border-blue-400/30 transition disabled:opacity-50"
             >
@@ -157,14 +155,12 @@ function EmptyState({ onGenerate }: { onGenerate: (goal: string, source: "ai" | 
 function PhaseCard({
   phase,
   index,
-  total,
   isExpanded,
   onToggle,
   onStatusChange,
 }: {
   phase: RoadmapPhase;
   index: number;
-  total: number;
   isExpanded: boolean;
   onToggle: () => void;
   onStatusChange: (status: RoadmapPhase["status"]) => void;
@@ -172,7 +168,6 @@ function PhaseCard({
   const statusCfg = STATUS_CONFIG[phase.status];
   const StatusIcon = statusCfg.icon;
   const PhaseIcon = PHASE_ICONS[index % PHASE_ICONS.length];
-  const angle = (index / total) * 360;
   const isLeft = index % 2 === 0;
 
   return (
@@ -320,8 +315,6 @@ function RoadmapView({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const updatePhase = useUpdatePhase();
   const deleteRoadmap = useDeleteRoadmap();
-  const navigate = useNavigate();
-
   const handleStatusChange = (phaseId: string, status: RoadmapPhase["status"]) => {
     updatePhase.mutate({ roadmapId: roadmap.id, phaseId, status });
   };
@@ -374,7 +367,6 @@ function RoadmapView({
             <PhaseCard
               phase={phase}
               index={i}
-              total={roadmap.phases.length}
               isExpanded={expandedId === phase.id}
               onToggle={() => setExpandedId(expandedId === phase.id ? null : phase.id)}
               onStatusChange={(status) => handleStatusChange(phase.id, status)}
@@ -391,7 +383,7 @@ export default function RoadmapGeneratorPage() {
   const [view, setView] = useState<"list" | "detail">("list");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showGenerator, setShowGenerator] = useState(false);
-  const { data: roadmaps, isLoading: loadingList } = useRoadmaps();
+  const { data: roadmaps } = useRoadmaps();
   const { data: roadmapDetail, isLoading: loadingDetail } = useRoadmapDetail(selectedId);
   const generateRoadmap = useGenerateRoadmap();
 

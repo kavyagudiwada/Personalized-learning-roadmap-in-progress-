@@ -13,8 +13,9 @@ import AuthCallback from '@/features/authentication/components/auth-callback'
 import GoogleAuthCallback from '@/features/authentication/components/google-auth-callback'
 import RoadmapGeneratorPage from '@/features/roadmap-generator/components/roadmap-generator-page'
 import ChatbotPage from '@/features/chatbot/components/chatbot-page'
-
-
+import GamificationDashboard from '@/features/gamification/components/gamification-dashboard'
+import CodingChallenges from '@/features/gamification/components/coding-challenges'
+import InterviewPrepPage from '@/features/interview-preparation/components/interview-prep-page'
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -81,6 +82,9 @@ const assessmentRoute = createRoute({
 const resourcesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/resources',
+  validateSearch: (input: Record<string, unknown>) => ({
+    skill: typeof input.skill === 'string' ? input.skill : undefined,
+  }),
   component: ResourcesPage,
 })
 
@@ -98,6 +102,24 @@ const chatbotRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/chatbot',
   component: ChatbotPage,
+})
+
+const gamificationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/gamification',
+  component: GamificationDashboard,
+})
+
+const codingChallengesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/gamification/challenges',
+  component: CodingChallenges,
+})
+
+const interviewPrepRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/interview-prep',
+  component: InterviewPrepPage,
 })
 
 const authCallbackRoute = createRoute({
@@ -125,6 +147,9 @@ const routeTree = rootRoute.addChildren([
   resourcesRoute,
   roadmapRoute, 
   chatbotRoute,
+  interviewPrepRoute,
+  gamificationRoute,
+  codingChallengesRoute,
   authCallbackRoute,
   googleAuthCallbackRoute,
 

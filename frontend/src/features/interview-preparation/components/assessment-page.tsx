@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { submitAssessment } from "@/services/api";
 
@@ -157,14 +157,26 @@ export default function AssessmentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Try to get data from localStorage first (TanStack Router compatible)
-  const localStorageData = localStorage.getItem("assessment_data");
-  const state = localStorageData 
-    ? JSON.parse(localStorageData) 
-    : (location.state as unknown as AssessmentLocationState | null | undefined) ?? null;
+  let state: AssessmentLocationState | null = null;
+  try {
+    const localStorageData = localStorage.getItem("assessment_data");
+    if (localStorageData) {
+      state = JSON.parse(localStorageData);
+    }
+  } catch {
+    state = null;
+  }
+  if (!state) {
+    state = (location.state as unknown as AssessmentLocationState | null | undefined) ?? null;
+  }
+
+  useEffect(() => {
+    if (!state?.assessmentId || !state?.questions?.length) {
+      navigate({ to: "/skill-gap", replace: true });
+    }
+  }, [navigate]);
 
   if (!state?.assessmentId || !state?.questions?.length) {
-    navigate({ to: "/skill-gap", replace: true });
     return null;
   }
 
