@@ -22,6 +22,7 @@ const allowedOrigins = [
 	process.env.FRONTEND_URL || "http://localhost:5173",
 	"http://localhost:5173",
 	"http://localhost:3000",
+
 ];
 
 
@@ -29,7 +30,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "personalized-learning-roadmap-in-progress-u8od-16uc5hqjt.vercel.app",
+      "https://personalized-learning-roadmap-in-progress-u8od-16uc5hqjt.vercel.app",
     ],
     credentials: true,
   })
