@@ -49,6 +49,13 @@ app.use("/api/auth/callback", (req, _res, next) => {
 	next();
 });
 
+app.use("/api/auth", (req, _res, next) => {
+	if (req.path === "/get-session" || req.path === "/get-session/") {
+		console.log(`[get-session req] cookies:`, req.headers.cookie);
+	}
+	next();
+});
+
 app.all("/api/auth/*", async (req, res) => {
 	const host = req.headers.host || "localhost";
 	const url = new URL(req.url || "", `http://${host}`);
