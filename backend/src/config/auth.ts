@@ -5,6 +5,7 @@ import { env } from "@/config/env";
 import { prisma } from "@/database";
 
 const frontendUrl = env.FRONTEND_URL || "http://localhost:5173";
+const vercelRegex = /^https:\/\/.*\.vercel\.app$/;
 
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, {
@@ -25,7 +26,7 @@ export const auth = betterAuth({
 			clientSecret: env.GITHUB_CLIENT_SECRET || "",
 		},
 	},
-	trustedOrigins: [frontendUrl],
+	trustedOrigins: [frontendUrl, vercelRegex],
 	account: {
 		accountLinking: {
 			requireLocalEmailVerified: false,
