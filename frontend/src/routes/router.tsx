@@ -2,11 +2,14 @@ import { createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/re
 import Home from '@/features/dashboard/components/home'
 import LoginPage from '@/features/authentication/components/login-page'
 import Dashboard from '@/features/dashboard/components/dashboard'
+import ResumeCover from '@/features/profile-analysis/components/resume-cover'
 import ResumeAnalysis from '@/features/profile-analysis/components/resume-analysis'
+import GithubCover from '@/features/profile-analysis/components/github-cover'
 import SkillGapDashboard from '@/features/skill-gap-analysis/components/skill-gap-dashboard'
 import JobMatches from '@/features/skill-gap-analysis/components/job-matches'
 import ProgressHistory from '@/features/skill-gap-analysis/components/progress-history'
 import GithubAnalysis from '@/features/profile-analysis/components/github-analysis'
+import AssessmentCover from '@/features/interview-preparation/components/assessment-cover'
 import AssessmentPage from '@/features/interview-preparation/components/assessment-page'
 import ResourcesPage from '@/routes/resources'
 import AuthCallback from '@/features/authentication/components/auth-callback'
@@ -47,6 +50,12 @@ const dashboardRoute = createRoute({
 const resumeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/resume',
+  component: ResumeCover,
+})
+
+const resumeAnalysisRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/resume/analysis',
   component: ResumeAnalysis,
 })
 
@@ -71,12 +80,24 @@ const progressRoute = createRoute({
 const githubRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/github',
+  component: GithubCover,
+})
+
+const githubAnalysisRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/github/analysis',
   component: GithubAnalysis,
 })
 
 const assessmentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/assessment',
+  component: AssessmentCover,
+})
+
+const assessmentQuizRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quiz',
   component: AssessmentPage,
 })
 
@@ -146,11 +167,14 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   dashboardRoute,
   resumeRoute,
+  resumeAnalysisRoute,
   skillGapRoute,
   jobMatchesRoute,
   progressRoute,
   githubRoute,
+  githubAnalysisRoute,
   assessmentRoute,
+  assessmentQuizRoute,
   resourcesRoute,
   roadmapRoute, 
   chatbotRoute,

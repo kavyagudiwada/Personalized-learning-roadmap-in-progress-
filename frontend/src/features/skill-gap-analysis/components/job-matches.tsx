@@ -38,7 +38,7 @@ export default function JobMatches({ onBack }: JobMatchesProps) {
           >
             ← Back
           </button>
-          <h1 className="text-3xl font-black text-[#171C4A]">LearnFlow.</h1>
+          <h1 className="text-3xl font-black text-[#171C4A]">CareerIntel.</h1>
           <div className="w-20" />
         </div>
       </header>

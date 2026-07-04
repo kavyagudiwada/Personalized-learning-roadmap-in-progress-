@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/features/authentication/hooks/use-auth";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardNavbar() {
   const navigate = useNavigate();
@@ -8,9 +9,8 @@ export default function DashboardNavbar() {
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
-const [showRoadmapMenu, setShowRoadmapMenu] = useState(false);
-const [showAiCoachMenu, setShowAiCoachMenu] = useState(false);
-
+  const [showRoadmapMenu, setShowRoadmapMenu] = useState(false);
+  const [showAiCoachMenu, setShowAiCoachMenu] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -19,172 +19,81 @@ const [showAiCoachMenu, setShowAiCoachMenu] = useState(false);
 
   const displayName = user?.fullName || user?.username || "Learner";
 
+  const navLinkClass = "text-sm font-semibold text-gray-500 hover:text-[#171C4A] transition px-3 py-1.5 rounded-xl hover:bg-[#171C4A]/5";
+  const dropdownClass = "absolute top-full mt-1.5 bg-white backdrop-blur-xl rounded-2xl shadow-xl shadow-black/10 border border-gray-200/60 overflow-hidden min-w-[200px]";
+
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate({ to: "/" })}
-            className="text-3xl font-black text-[#171C4A] hover:opacity-80"
-          >
-            LearnFlow.
-          </button>
-        </div>
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200/80 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+        <button onClick={() => navigate({ to: "/" })} className="text-2xl font-black text-[#171C4A] hover:opacity-80 tracking-tight">
+          CareerIntel.
+        </button>
 
-        <nav className="hidden lg:flex items-center gap-8 text-gray-600 font-medium">
+        <nav className="hidden lg:flex items-center gap-1">
           <div className="relative">
-            <button
-              onClick={() => setShowDashboardMenu(!showDashboardMenu)}
-              className="hover:text-[#171C4A] flex items-center gap-1"
-            >
+            <button onClick={() => setShowDashboardMenu(!showDashboardMenu)} className={`${navLinkClass} flex items-center gap-1`}>
               Dashboard
-              <span className={`transition-transform ${showDashboardMenu ? "rotate-180" : ""}`}>
-                ▼
-              </span>
+              <motion.span animate={{ rotate: showDashboardMenu ? 180 : 0 }} transition={{ duration: 0.2 }} className="text-[10px]">▼</motion.span>
             </button>
-
-            {showDashboardMenu && (
-              <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
-                <button
-                  onClick={() => {
-                    navigate({ to: "/skill-gap" });
-                    setShowDashboardMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700 font-medium transition"
-                >
-                  Skill Gap Dashboard
-                </button>
-              </div>
-            )}
+            <AnimatePresence>
+              {showDashboardMenu && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className={dropdownClass}>
+                  <button onClick={() => { navigate({ to: "/skill-gap" }); setShowDashboardMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-gray-600 font-medium text-sm transition">Skill Gap Dashboard</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <button onClick={() => navigate({ to: "/resume" })} className="hover:text-[#171C4A]">
-            Resume
-          </button>
-
-          <button onClick={() => navigate({ to: "/github" })} className="hover:text-[#171C4A]">
-            GitHub
-          </button>
-
-          <button onClick={() => navigate({ to: "/resources" })} className="hover:text-[#171C4A]">
-            Resources
-          </button>
-
-          <button onClick={() => navigate({ to: "/gamification" })} className="hover:text-[#171C4A]">
-            Gamification
-          </button>
+          <button onClick={() => navigate({ to: "/resume" })} className={navLinkClass}>Resume</button>
+          <button onClick={() => navigate({ to: "/github" })} className={navLinkClass}>GitHub</button>
+          <button onClick={() => navigate({ to: "/resources" })} className={navLinkClass}>Resources</button>
+          <button onClick={() => navigate({ to: "/gamification" })} className={navLinkClass}>Gamification</button>
 
           <div className="relative">
-            <button
-              onClick={() => setShowAiCoachMenu(!showAiCoachMenu)}
-              className="hover:text-[#171C4A] flex items-center gap-1"
-            >
+            <button onClick={() => setShowAiCoachMenu(!showAiCoachMenu)} className={`${navLinkClass} flex items-center gap-1`}>
               AI Coach
-              <span className={`transition-transform ${showAiCoachMenu ? "rotate-180" : ""}`}>
-                ▼
-              </span>
+              <motion.span animate={{ rotate: showAiCoachMenu ? 180 : 0 }} transition={{ duration: 0.2 }} className="text-[10px]">▼</motion.span>
             </button>
-
-            {showAiCoachMenu && (
-              <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
-                <button
-                  onClick={() => {
-                    navigate({ to: "/chatbot" });
-                    setShowAiCoachMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700 font-medium transition"
-                >
-                  AI Coach
-                </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: "/interview-prep" });
-                    setShowAiCoachMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700 font-medium transition"
-                >
-                  Interview Prep
-                </button>
-              </div>
-            )}
+            <AnimatePresence>
+              {showAiCoachMenu && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className={dropdownClass}>
+                  <button onClick={() => { navigate({ to: "/chatbot" }); setShowAiCoachMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-gray-600 font-medium text-sm transition">AI Coach</button>
+                  <button onClick={() => { navigate({ to: "/interview-prep" }); setShowAiCoachMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-gray-600 font-medium text-sm transition">Interview Prep</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
+          <div className="relative">
+            <button onClick={() => setShowRoadmapMenu(!showRoadmapMenu)} className={`${navLinkClass} flex items-center gap-1`}>
+              Roadmap
+              <motion.span animate={{ rotate: showRoadmapMenu ? 180 : 0 }} transition={{ duration: 0.2 }} className="text-[10px]">▼</motion.span>
+            </button>
+            <AnimatePresence>
+              {showRoadmapMenu && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className={dropdownClass}>
+                  <button onClick={() => { navigate({ to: "/roadmap" }); setShowRoadmapMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-gray-600 font-medium text-sm transition">Roadmap Generator</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </nav>
 
         <div className="relative">
-  <button
-    onClick={() => setShowRoadmapMenu(!showRoadmapMenu)}
-className="hover:text-[#171C4A] flex items-center gap-1"
-  >
-    Roadmap
-    <span
-      className={`transition-transform ${
-        showRoadmapMenu ? "rotate-180" : ""
-      }`}
-    >
-      ▼
-    </span>
-  </button>
-
-  {showRoadmapMenu && (
-    <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
-      <button
-        onClick={() => {
-          navigate({ to: "/roadmap" });
-          setShowRoadmapMenu(false);
-        }}
-        className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700 font-medium transition"
-      >
-        Roadmap Generator
-      </button>
-    </div>
-  )}
-</div>
-
-
-</nav>
-
-
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-3 bg-[#F8F6E8] px-4 py-2 rounded-full hover:opacity-90"
-            >
-              <img
-                src={
-                  avatarError || !user?.avatarUrl
-                    ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                    : user.avatarUrl
-                }
-                alt="Profile"
-                className="w-10 h-10 rounded-full object-cover"
-                onError={() => setAvatarError(true)}
-              />
-              <div className="text-left hidden sm:block">
-                <p className="font-bold text-[#171C4A]">{displayName}</p>
-              </div>
-            </button>
-
+          <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-2 bg-gray-50/80 px-3 py-1.5 rounded-full hover:bg-gray-100 border border-gray-200/60 transition shadow-sm">
+            <img src={avatarError || !user?.avatarUrl ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" : user.avatarUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover" onError={() => setAvatarError(true)} />
+            <div className="text-left hidden sm:block">
+              <p className="font-bold text-sm text-[#171C4A]">{displayName}</p>
+            </div>
+          </button>
+          <AnimatePresence>
             {showProfileMenu && (
-              <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden min-w-[180px]">
-                <button
-                  onClick={() => {
-                    navigate({ to: "/dashboard" });
-                    setShowProfileMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-[#F8F6E8] text-gray-700"
-                >
-                  My Dashboard
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-3 hover:bg-red-50 text-red-600 font-medium"
-                >
-                  Log Out
-                </button>
-              </div>
+              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl shadow-black/10 border border-gray-200/60 overflow-hidden min-w-[170px]">
+                <button onClick={() => { navigate({ to: "/dashboard" }); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-gray-600 font-medium text-sm transition">My Dashboard</button>
+                <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-red-500 font-medium text-sm transition">Log Out</button>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </div>
     </header>

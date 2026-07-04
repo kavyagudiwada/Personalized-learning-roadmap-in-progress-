@@ -255,7 +255,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center mt-8 text-gray-500 text-sm">
-            By signing in, you agree to our terms. Your data is used only to provide LearnFlow
+            By signing in, you agree to our terms. Your data is used only to provide CareerIntel
             features.
           </p>
         </motion.div>

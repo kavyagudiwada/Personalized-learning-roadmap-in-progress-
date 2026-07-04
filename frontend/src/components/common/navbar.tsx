@@ -8,7 +8,7 @@ export default function Navbar() {
   return (
     <header className="flex justify-between items-center px-12 py-5">
       <Link to="/" className="font-black text-3xl text-[#171C4A]">
-        LearnFlow.
+        CareerIntel.
       </Link>
 
       <nav className="hidden md:flex gap-12 text-gray-500 font-medium">

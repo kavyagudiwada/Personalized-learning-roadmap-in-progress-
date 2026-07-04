@@ -1,4 +1,4 @@
-# LearnFlow Frontend
+# CareerIntel Frontend
 
 Personalized Learning Roadmap - AI-powered platform for skill gap analysis, learning roadmaps, and interview preparation.
 
