@@ -104,11 +104,11 @@ app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/roadmap", roadmapRoutes);
 app.use("/api/coding", codingRoutes);
 
-const frontendDist = path.join(__dirname, "../../frontend/dist");
-app.use(express.static(frontendDist));
-app.get("*", (_req, res) => {
-	res.sendFile(path.join(frontendDist, "index.html"));
-});
+// const frontendDist = path.join(__dirname, "../../frontend/dist");
+// app.use(express.static(frontendDist));
+// app.get("*", (_req, res) => {
+// 	res.sendFile(path.join(frontendDist, "index.html"));
+// });
 
 const adminMarketRouter = express.Router();
 adminMarketRouter.use(authenticateToken);
