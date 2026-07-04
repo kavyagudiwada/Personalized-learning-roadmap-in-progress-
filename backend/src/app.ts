@@ -89,12 +89,8 @@ app.all("/api/auth/*", async (req, res) => {
 		console.log(`[Auth Proxy OUT] ${req.method} ${req.path} (isSecure=${isSecure}) — ${allSetCookies.length} cookie(s):`, allSetCookies);
 	}
 	for (const cookie of allSetCookies) {
-		if (/^better-auth\.(session|bearer)/i.test(cookie)) {
-			const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
-			res.append("set-cookie", modified);
-		} else {
-			res.append("set-cookie", cookie);
-		}
+		const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
+		res.append("set-cookie", modified);
 	}
 		const text = await response.text();
 		if (text) {
