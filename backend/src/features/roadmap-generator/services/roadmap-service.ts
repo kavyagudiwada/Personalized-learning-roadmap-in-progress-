@@ -592,9 +592,13 @@ export async function generateRoadmap(
 	if (source === "structured") {
 		phases = buildStructuredPhases(goal);
 	} else {
-		const prompt = buildAIPrompt(goal, skills, weak);
-		const aiText = await generateAIReply(prompt);
-		phases = parseAIPhases(aiText);
+		try {
+			const prompt = buildAIPrompt(goal, skills, weak);
+			const aiText = await generateAIReply(prompt);
+			phases = parseAIPhases(aiText);
+		} catch {
+			phases = buildStructuredPhases(goal);
+		}
 	}
 
 	const totalWeeks = phases.reduce((sum, p) => {
