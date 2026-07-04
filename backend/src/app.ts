@@ -107,6 +107,22 @@ app.all("/api/auth/*", async (req, res) => {
 				}
 			} catch { /* not JSON or unexpected shape */ }
 		}
+		if (!text) {
+			const location = response.headers.get("location");
+			const sessionCookie = allSetCookies.find((c) =>
+				/^__Secure-better-auth\.session_token=/i.test(c) || /^better-auth\.session_token=/i.test(c)
+			);
+			if (location && sessionCookie) {
+				const raw = sessionCookie.split(";")[0].split("=").slice(1).join("=");
+				const urlObj = new URL(location);
+				urlObj.searchParams.set("session_token", raw);
+				console.log(`[Auth Redirect] ${location} → ${urlObj.toString()}`);
+				res.status(response.status);
+				res.setHeader("location", urlObj.toString());
+				res.end();
+				return;
+			}
+		}
 		res.status(response.status);
 		const contentType = response.headers.get("content-type");
 		if (contentType) res.setHeader("content-type", contentType);

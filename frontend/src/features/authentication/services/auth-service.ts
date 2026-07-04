@@ -2,9 +2,10 @@ const rawApiUrl = import.meta.env.VITE_API_URL;
 const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 const API_BASE_URL = rawApiUrl && rawApiUrl !== "" ? rawApiUrl : isLocal ? "http://localhost:5001" : "https://personalized-learning-roadmap-backend.onrender.com";
 
-export async function fetchSession() {
+export async function fetchSession(token?: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/get-session`, {
-    credentials: "include",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    credentials: token ? "omit" : "include",
   });
   if (!response.ok) {
     throw new Error("Failed to fetch session");

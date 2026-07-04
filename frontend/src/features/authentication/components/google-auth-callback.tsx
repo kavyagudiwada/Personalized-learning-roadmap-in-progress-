@@ -24,9 +24,11 @@ export default function GoogleAuthCallback() {
     }
 
     clearAuthStorage();
+
+    const sessionToken = params.get("session_token");
     setStatus("Getting session...");
 
-    fetchSession()
+    fetchSession(sessionToken || undefined)
       .then(async (data) => {
         if (!data || !data.session || !data.user) {
           throw new Error("No session found. Authentication may have failed.");
