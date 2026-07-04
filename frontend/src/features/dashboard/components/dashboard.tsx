@@ -97,7 +97,7 @@ export default function Dashboard() {
               View Skill Gap →
             </button>
             <button
-              onClick={() => navigate({ to: "/assessment" })}
+              onClick={() => navigate({ to: "/skill-gap" })}
               className="bg-[#171C4A] text-white px-5 py-3 rounded-2xl font-bold text-sm shadow-lg hover:scale-[1.02] transition"
             >
               Take Assessment →
