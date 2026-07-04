@@ -2,7 +2,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/features/authentication/hooks/use-auth";
-import { ArrowLeft, Play, RotateCcw, CheckCircle2, XCircle, Lightbulb, Zap, ChevronDown } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, CheckCircle2, XCircle, Lightbulb, Zap, ChevronDown, Sparkles } from "lucide-react";
+import { getCodingSolution } from "@/services/api";
 
 type Language = "javascript" | "python" | "typescript" | "java" | "cpp";
 
@@ -428,6 +429,9 @@ export default function CodingChallenges() {
   const [xp, setXp] = useState(() => loadXp(userId));
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [langOpen, setLangOpen] = useState(false);
+  const [solution, setSolution] = useState<{ solution: string; explanation: string; timeComplexity?: string; spaceComplexity?: string } | null>(null);
+  const [solutionLoading, setSolutionLoading] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -440,6 +444,8 @@ export default function CodingChallenges() {
     setCode(ch.starterCode[language] || ch.starterCode.javascript);
     setResults(null);
     setShowHint(false);
+    setShowSolution(false);
+    setSolution(null);
     if (editorRef.current) editorRef.current.focus();
   }, [language]);
 
@@ -447,6 +453,8 @@ export default function CodingChallenges() {
     setLanguage(lang);
     setCode(selected.starterCode[lang] || selected.starterCode.javascript);
     setResults(null);
+    setSolution(null);
+    setShowSolution(false);
     setLangOpen(false);
   }, [selected]);
 
@@ -491,7 +499,31 @@ export default function CodingChallenges() {
     setCode(selected.starterCode[language] || selected.starterCode.javascript);
     setResults(null);
     setShowHint(false);
+    setShowSolution(false);
   }, [selected, language]);
+
+  const handleGetSolution = useCallback(async () => {
+    setSolutionLoading(true);
+    setSolution(null);
+    setShowSolution(true);
+    try {
+      const langLabel = LANGUAGES.find((l) => l.id === language)?.label ?? language;
+      const data = await getCodingSolution(
+        selected.title,
+        selected.description,
+        langLabel,
+        code || undefined,
+      );
+      setSolution(data);
+      setCode(data.solution);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to generate solution";
+      setToast({ message: msg, type: "error" });
+      setTimeout(() => setToast(null), 4000);
+    } finally {
+      setSolutionLoading(false);
+    }
+  }, [selected, code, language]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Tab") {
@@ -642,7 +674,15 @@ export default function CodingChallenges() {
                 style={{ minHeight: "220px", lineHeight: "1.6", tabSize: 2 }}
                 spellCheck={false}
               />
-              <div className="flex items-center justify-between px-5 py-3 bg-[#181825]">
+                <div className="flex items-center justify-between px-5 py-3 bg-[#181825]">
+                  <button
+                    onClick={handleGetSolution}
+                    disabled={solutionLoading}
+                    className="flex items-center gap-2 px-5 py-2 bg-[#f5c2e7] text-[#1e1e2e] rounded-xl font-bold text-sm hover:bg-[#f0b6dc] transition disabled:opacity-50"
+                  >
+                    <Sparkles size={14} />
+                    {solutionLoading ? "Generating..." : "Show Solution"}
+                  </button>
                 <div className="relative">
                   <button
                     onClick={() => setLangOpen(!langOpen)}
@@ -723,6 +763,59 @@ export default function CodingChallenges() {
                     </div>
                   ))}
                 </div>
+              </motion.div>
+            )}
+
+            {showSolution && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-[24px] p-6 shadow-xl"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-[#171C4A] text-lg">AI Solution</h3>
+                  <button onClick={() => setShowSolution(false)} className="text-sm text-gray-400 hover:text-gray-600">
+                    Hide
+                  </button>
+                </div>
+
+                {solutionLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Sparkles size={18} className="animate-pulse" />
+                      <span>Generating solution...</span>
+                    </div>
+                  </div>
+                ) : solution ? (
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-500 mb-2">Solution Code</p>
+                      <pre className="p-4 bg-[#1e1e2e] text-[#cdd6f4] font-mono text-sm rounded-2xl overflow-x-auto whitespace-pre-wrap">
+                        {solution.solution}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-500 mb-2">Explanation</p>
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{solution.explanation}</p>
+                    </div>
+                    {(solution.timeComplexity || solution.spaceComplexity) && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {solution.timeComplexity && (
+                          <div className="bg-gray-50 rounded-2xl p-4">
+                            <span className="text-xs font-semibold text-gray-500">Time Complexity</span>
+                            <p className="text-lg font-bold text-[#171C4A] mt-1">{solution.timeComplexity}</p>
+                          </div>
+                        )}
+                        {solution.spaceComplexity && (
+                          <div className="bg-gray-50 rounded-2xl p-4">
+                            <span className="text-xs font-semibold text-gray-500">Space Complexity</span>
+                            <p className="text-lg font-bold text-[#171C4A] mt-1">{solution.spaceComplexity}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </motion.div>
             )}
           </div>

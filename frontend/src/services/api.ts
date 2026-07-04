@@ -451,6 +451,35 @@ export async function getCareerGoals() {
   }>;
 }
 
+// ─── Coding Challenge Solution ─────────────────────────────────────────────────
+
+export interface CodingSolutionResponse {
+  solution: string;
+  explanation: string;
+  timeComplexity?: string;
+  spaceComplexity?: string;
+}
+
+export async function getCodingSolution(
+  title: string,
+  description: string,
+  language: string,
+  userCode?: string,
+) {
+  const response = await fetch(`${API_BASE_URL}/api/coding/solution`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ title, description, language, userCode }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to generate solution");
+  }
+
+  return response.json() as Promise<CodingSolutionResponse>;
+}
+
 // ─── Job Matches ──────────────────────────────────────────────────────────────
 
 export interface CompanyMatch {
