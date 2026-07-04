@@ -114,8 +114,9 @@ app.all("/api/auth/*", async (req, res) => {
 			);
 			if (location && sessionCookie) {
 				const raw = sessionCookie.split(";")[0].split("=").slice(1).join("=");
+				const decoded = decodeURIComponent(raw);
 				const urlObj = new URL(location);
-				urlObj.searchParams.set("session_token", raw);
+				urlObj.searchParams.set("session_token", decoded);
 				console.log(`[Auth Redirect] ${location} → ${urlObj.toString()}`);
 				res.status(response.status);
 				res.setHeader("location", urlObj.toString());
