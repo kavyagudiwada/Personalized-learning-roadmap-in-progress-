@@ -1,11 +1,63 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { startGitHubOAuth, startGoogleOAuth } from "../services/oauth";
+import { useAuthStore } from "../store/auth-store";
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "../types/auth";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 export default function LoginPage() {
-
+  const { login } = useAuthStore();
   const [name, setName] = useState("");
-const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const endpoint = isSignUp ? "sign-up/email" : "sign-in/email";
+      const body: Record<string, string> = { email, password };
+      if (isSignUp) body.name = name;
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Authentication failed");
+      }
+
+      const token = data.token || data.data?.token;
+      const user = data.user || data.data?.user;
+
+      if (token && user) {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+        await login(token, user);
+        window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchMode = () => {
+    setIsSignUp(!isSignUp);
+    setError("");
+  };
 
   return (
     <div className="min-h-screen flex overflow-hidden bg-[#F8F6E8]">
@@ -96,71 +148,113 @@ const [email, setEmail] = useState("");
             <p className="mt-4 text-gray-500">Continue your AI-powered learning journey</p>
           </div>
 
-   <div className="mt-8 space-y-5">
-  {/* Full Name */}
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 mb-2">
-      Full Name
-    </label>
-    <input
-      type="text"
-      value={name}
-      onChange={(e) => setName(e.target.value)}
-      placeholder="Enter your full name"
-      className="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#171C4A]/20 focus:border-[#171C4A]"
-    />
-  </div>
+          <form onSubmit={handleEmailAuth} className="mt-8 space-y-5">
+            {error && (
+              <div className="bg-red-50 text-red-600 text-sm rounded-2xl px-4 py-3 border border-red-200">
+                {error}
+              </div>
+            )}
 
-  {/* Email */}
-  <div>
-    <label className="block text-sm font-semibold text-gray-700 mb-2">
-      Email Address
-    </label>
-    <input
-      type="email"
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-      placeholder="Enter your email address"
-      className="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#171C4A]/20 focus:border-[#171C4A]"
-    />
-  </div>
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                  className="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#171C4A]/20 focus:border-[#171C4A]"
+                />
+              </div>
+            )}
 
-  {/* OR Divider */}
-  <div className="flex items-center my-4">
-    <div className="flex-1 border-t border-gray-200"></div>
-    <span className="px-3 text-sm text-gray-400 font-medium">OR</span>
-    <div className="flex-1 border-t border-gray-200"></div>
-  </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                required
+                className="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#171C4A]/20 focus:border-[#171C4A]"
+              />
+            </div>
 
-  {/* Google Button */}
-  <button
-    type="button"
-    onClick={startGoogleOAuth}
-    className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition font-semibold"
-  >
-    <img
-      src="https://www.svgrepo.com/show/475656/google-color.svg"
-      alt="Google"
-      className="w-5 h-5"
-    />
-    Continue with Google
-  </button>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                minLength={8}
+                className="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#171C4A]/20 focus:border-[#171C4A]"
+              />
+            </div>
 
-  {/* GitHub Button */}
-  <button
-    type="button"
-    onClick={startGitHubOAuth}
-    className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition font-semibold"
-  >
-    <img
-      src="https://cdn-icons-png.flaticon.com/512/25/25231.png"
-      alt="GitHub"
-      className="w-5 h-5"
-    />
-    Continue with GitHub
-  </button>
-</div>
-    <p className="text-center mt-8 text-gray-500 text-sm">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#171C4A] text-white rounded-2xl py-4 font-bold hover:bg-[#171C4A]/90 transition disabled:opacity-50"
+            >
+              {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
+            </button>
+
+            <p className="text-center text-sm text-gray-500">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button
+                type="button"
+                onClick={switchMode}
+                className="text-[#171C4A] font-semibold hover:underline"
+              >
+                {isSignUp ? "Sign In" : "Sign Up"}
+              </button>
+            </p>
+
+            <div className="flex items-center my-4">
+              <div className="flex-1 border-t border-gray-200"></div>
+              <span className="px-3 text-sm text-gray-400 font-medium">OR</span>
+              <div className="flex-1 border-t border-gray-200"></div>
+            </div>
+          </form>
+
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={startGoogleOAuth}
+              className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition font-semibold"
+            >
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                className="w-5 h-5"
+              />
+              Continue with Google
+            </button>
+
+            <button
+              type="button"
+              onClick={startGitHubOAuth}
+              className="w-full border border-gray-200 rounded-2xl py-4 flex items-center justify-center gap-3 bg-white hover:bg-gray-50 transition font-semibold"
+            >
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/25/25231.png"
+                alt="GitHub"
+                className="w-5 h-5"
+              />
+              Continue with GitHub
+            </button>
+          </div>
+
+          <p className="text-center mt-8 text-gray-500 text-sm">
             By signing in, you agree to our terms. Your data is used only to provide LearnFlow
             features.
           </p>
@@ -168,4 +262,4 @@ const [email, setEmail] = useState("");
       </div>
     </div>
   );
-} 
+}
