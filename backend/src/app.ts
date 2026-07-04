@@ -73,18 +73,13 @@ app.all("/api/auth/*", async (req, res) => {
 		res.status(response.status);
 		const contentType = response.headers.get("content-type");
 		if (contentType) res.setHeader("content-type", contentType);
-		const setCookies: string[] = [];
 		response.headers.forEach((value, key) => {
 			const lower = key.toLowerCase();
-			if (lower === "content-type") return;
-			if (lower === "set-cookie") {
-				setCookies.push(value);
-				return;
-			}
+			if (lower === "content-type" || lower === "set-cookie") return;
 			res.setHeader(key, value);
 		});
 	const isSecure = req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
-	for (const cookie of setCookies) {
+	for (const cookie of response.headers.getSetCookie()) {
 		if (/^better-auth\.(session|bearer)/i.test(cookie)) {
 			const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
 			res.append("set-cookie", modified);
