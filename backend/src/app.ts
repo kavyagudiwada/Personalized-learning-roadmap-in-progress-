@@ -19,8 +19,13 @@ import { errorHandler } from "@/middleware/error-handler";
 
 const app = express();
 
-const allowedOrigins = [
-	process.env.FRONTEND_URL || "http://localhost:5173",
+const frontendUrls = (process.env.FRONTEND_URL || "")
+	.split(",")
+	.map((s) => s.trim())
+	.filter(Boolean);
+const allowedOrigins: (string | RegExp)[] = [
+	...frontendUrls,
+	/^https:\/\/.*\.vercel\.app$/,
 	"http://localhost:5173",
 	"http://localhost:3000",
 ];
@@ -29,7 +34,7 @@ app.use(
 	cors({
 		origin: (origin, callback) => {
 			if (!origin) return callback(null, true);
-			if (allowedOrigins.includes(origin)) return callback(null, true);
+			if (allowedOrigins.some((o) => (typeof o === "string" ? o === origin : o.test(origin)))) return callback(null, true);
 			callback(new Error(`CORS blocked: ${origin}`));
 		},
 		credentials: true,
