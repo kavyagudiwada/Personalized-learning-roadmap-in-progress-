@@ -5,7 +5,7 @@ import { useResourceRecommendations, useMarkResourceComplete, useTriggerFullAnal
 import type { ResourceItem } from "@/services/api";
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.04 } } };
-const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } };
+const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as const } } };
 
 const DIFFICULTY_STYLES: Record<string, { label: string; dot: string }> = {
   beginner: { label: "Beginner", dot: "bg-green-500" },
@@ -176,7 +176,7 @@ export default function ResourceList({ initialSkill }: { initialSkill?: string }
                 <ellipse cx="114" cy="63" rx="4" ry="4.5" fill="#171C4A"><animate attributeName="ry" values="4.5;1;4.5" dur="5s" repeatCount="indefinite" begin="1s" /></ellipse>
                 <path d="M87 74 Q100 86 113 74" fill="none" stroke="#D4836A" strokeWidth="2.5" strokeLinecap="round" />
                 <path d="M74 98 L126 98 L132 155 L68 155 Z" fill="url(#rShirt2)" />
-                <path d="M74 105 L50 90 L46 94" fill="none" stroke="url(#rShirt2)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round"
+                <motion.path d="M74 105 L50 90 L46 94" fill="none" stroke="url(#rShirt2)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round"
                   animate={{ rotate: [-5, 8, -5] }} style={{ transformOrigin: "74px 105px" }} />
                 <path d="M126 105 L145 125 L140 130" fill="none" stroke="url(#rShirt2)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
                 <circle cx="46" cy="94" r="5" fill="url(#rSkin2)" />

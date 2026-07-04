@@ -303,7 +303,7 @@ export default function AssessmentCover() {
         <motion.div variants={item} className="mt-14 max-w-5xl mx-auto">
           <h2 className="text-center text-sm font-semibold text-gray-400 uppercase tracking-wider mb-5">Or pick a topic to start</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {topicCards.map((t, i) => (
+            {topicCards.map((t) => (
               <motion.button
                 key={t.title}
                 variants={item}

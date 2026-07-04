@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { getQuestions } from "./assessment-questions";
 
 interface Question {
@@ -168,7 +168,6 @@ function LevelQuiz({
 
 export default function AssessmentPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [state, setState] = useState<AssessmentState | null>(null);
   const [completed, setCompleted] = useState(false);
   const [finalScores, setFinalScores] = useState<{ level: number; correct: number; total: number }[]>([]);

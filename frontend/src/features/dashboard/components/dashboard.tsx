@@ -16,7 +16,7 @@ interface DashboardData {
 }
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
-const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } } };
+const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const } } };
 
 function GlassCard({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
   return (
@@ -190,11 +190,11 @@ export default function Dashboard() {
                 <circle cx="100" cy="68" r="30" fill="url(#skinGrad1)" />
                 <ellipse cx="87" cy="64" rx="3.5" ry="5" fill="#171C4A"><animate attributeName="ry" values="5;1;5" dur="4s" repeatCount="indefinite" /></ellipse>
                 <ellipse cx="113" cy="64" rx="3.5" ry="5" fill="#171C4A"><animate attributeName="ry" values="5;1;5" dur="4s" repeatCount="indefinite" /></ellipse>
-                <path d="M89 76 Q100 85 111 76" fill="none" stroke="#D4836A" strokeWidth="2" strokeLinecap="round"
+                <motion.path d="M89 76 Q100 85 111 76" fill="none" stroke="#D4836A" strokeWidth="2" strokeLinecap="round"
                   animate={{ d: ["M89 76 Q100 85 111 76", "M89 74 Q100 88 111 74", "M89 76 Q100 85 111 76"] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
                 <path d="M77 98 L123 98 L127 150 L73 150 Z" fill="url(#shirtGrad1)" />
-                <path d="M77 105 L60 126 L64 130" fill="none" stroke="url(#shirtGrad1)" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"
+                <motion.path d="M77 105 L60 126 L64 130" fill="none" stroke="url(#shirtGrad1)" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"
                   animate={{ rotate: [0, -6, 0] }} style={{ transformOrigin: "77px 105px" }} />
                 <path d="M123 105 L140 126 L136 130" fill="none" stroke="url(#shirtGrad1)" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
                 <circle cx="64" cy="130" r="5" fill="url(#skinGrad1)" />
@@ -214,11 +214,11 @@ export default function Dashboard() {
                 <circle cx="100" cy="68" r="32" fill="url(#skinGrad2)" />
                 <ellipse cx="86" cy="63" rx="4" ry="4.5" fill="#171C4A"><animate attributeName="ry" values="4.5;1;4.5" dur="5s" repeatCount="indefinite" begin="1s" /></ellipse>
                 <ellipse cx="114" cy="63" rx="4" ry="4.5" fill="#171C4A"><animate attributeName="ry" values="4.5;1;4.5" dur="5s" repeatCount="indefinite" begin="1s" /></ellipse>
-                <path d="M87 74 Q100 86 113 74" fill="none" stroke="#D4836A" strokeWidth="2.5" strokeLinecap="round"
+                <motion.path d="M87 74 Q100 86 113 74" fill="none" stroke="#D4836A" strokeWidth="2.5" strokeLinecap="round"
                   animate={{ d: ["M87 74 Q100 86 113 74", "M87 72 Q100 90 113 72", "M87 74 Q100 86 113 74"] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} />
                 <path d="M74 98 L126 98 L132 155 L68 155 Z" fill="url(#shirtGrad2)" />
-                <path d="M74 105 L50 90 L46 94" fill="none" stroke="url(#shirtGrad2)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round"
+                <motion.path d="M74 105 L50 90 L46 94" fill="none" stroke="url(#shirtGrad2)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round"
                   animate={{ rotate: [-5, 8, -5] }} style={{ transformOrigin: "74px 105px" }} />
                 <path d="M126 105 L145 125 L140 130" fill="none" stroke="url(#shirtGrad2)" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
                 <circle cx="46" cy="94" r="5" fill="url(#skinGrad2)" />
