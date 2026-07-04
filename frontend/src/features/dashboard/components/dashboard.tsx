@@ -148,10 +148,7 @@ export default function Dashboard() {
             )}
           </button>
 
-          <button
-            onClick={() => navigate({ to: "/chatbot" })}
-            className="bg-[#F2DD85] rounded-[32px] p-8 shadow-xl text-left hover:scale-[1.02] transition"
-          >
+          <div className="bg-[#F2DD85] rounded-[32px] p-8 shadow-xl">
             <h2 className="text-2xl font-bold text-[#171C4A]">🤖 AI Career Coach</h2>
             <p className="mt-5 text-[#171C4A]">
               {dashboardData.skillGap?.coach ||
@@ -159,10 +156,7 @@ export default function Dashboard() {
                   ? "Run skill gap analysis to get personalized coaching based on your profile."
                   : "Upload your resume and run analysis to receive AI coaching tailored to your goals.")}
             </p>
-            <span className="inline-block mt-4 px-6 py-2 bg-[#171C4A] text-white rounded-2xl font-bold text-sm">
-              Chat Now →
-            </span>
-          </button>
+          </div>
         </div>
 
         {topWeakSkills.length > 0 && (
