@@ -129,7 +129,24 @@ export default function SkillGapDashboard({ onBack }: SkillGapDashboardProps) {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <button onClick={() => { if (onBack) onBack(); else navigate({ to: "/dashboard" }); }} className="px-5 py-2.5 bg-white shadow-md rounded-2xl hover:shadow-lg transition cursor-pointer text-sm font-semibold">← Dashboard</button>
           <h1 className="text-2xl font-black text-[#171C4A] tracking-tight">LearnFlow.</h1>
-          <div className="w-20" />
+          <button
+            onClick={() => {
+              try {
+                const stored = JSON.parse(localStorage.getItem("learnflow_skill_gap") || "{}");
+                if (stored.assessmentId && stored.questions) {
+                  localStorage.setItem("assessment_data", JSON.stringify({
+                    assessmentId: stored.assessmentId,
+                    questions: stored.questions,
+                    careerGoal: stored.skillGap?.goal || goal || sg.goal,
+                  }));
+                  navigate({ to: "/assessment" });
+                }
+              } catch {}
+            }}
+            className="px-5 py-2.5 bg-[#171C4A] text-white rounded-2xl font-bold text-sm shadow-lg hover:scale-[1.02] transition"
+          >
+            Take Assessment →
+          </button>
         </div>
       </header>
 
