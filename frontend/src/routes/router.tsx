@@ -16,6 +16,7 @@ import ChatbotPage from '@/features/chatbot/components/chatbot-page'
 import GamificationDashboard from '@/features/gamification/components/gamification-dashboard'
 import CodingChallenges from '@/features/gamification/components/coding-challenges'
 import InterviewPrepPage from '@/features/interview-preparation/components/interview-prep-page'
+import SelectGoal from '@/features/skill-gap-analysis/components/select-goal'
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -122,6 +123,12 @@ const interviewPrepRoute = createRoute({
   component: InterviewPrepPage,
 })
 
+const selectGoalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/select-goal',
+  component: SelectGoal,
+})
+
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/callback',
@@ -150,6 +157,7 @@ const routeTree = rootRoute.addChildren([
   interviewPrepRoute,
   gamificationRoute,
   codingChallengesRoute,
+  selectGoalRoute,
   authCallbackRoute,
   googleAuthCallbackRoute,
 
