@@ -4,8 +4,10 @@ import { bearer } from "better-auth/plugins";
 import { env } from "@/config/env";
 import { prisma } from "@/database";
 
-const frontendUrl = env.FRONTEND_URL || "http://localhost:5173";
-const vercelRegex = /^https:\/\/.*\.vercel\.app$/;
+const frontendUrls = (process.env.FRONTEND_URL || "")
+	.split(",")
+	.map((s) => s.trim())
+	.filter(Boolean);
 
 export const auth = betterAuth({
 	database: prismaAdapter(prisma, {
@@ -26,7 +28,7 @@ export const auth = betterAuth({
 			clientSecret: env.GITHUB_CLIENT_SECRET || "",
 		},
 	},
-	trustedOrigins: [frontendUrl, vercelRegex],
+	trustedOrigins: [...frontendUrls, "http://localhost:5173"],
 	account: {
 		accountLinking: {
 			requireLocalEmailVerified: false,
