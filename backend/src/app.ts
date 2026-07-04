@@ -78,9 +78,11 @@ app.all("/api/auth/*", async (req, res) => {
 			}
 			res.setHeader(key, value);
 		});
-		for (const cookie of setCookies) {
-			res.append("set-cookie", cookie);
-		}
+	const isSecure = req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
+	for (const cookie of setCookies) {
+		const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
+		res.append("set-cookie", modified);
+	}
 		const text = await response.text();
 		if (text) {
 			res.send(text);
