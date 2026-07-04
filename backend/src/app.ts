@@ -69,6 +69,9 @@ app.all("/api/auth/*", async (req, res) => {
 		!isGetOrHead && req.body && typeof req.body === "object" && Object.keys(req.body).length > 0
 			? JSON.stringify(req.body)
 			: undefined;
+	if (body) {
+		headers.set("content-type", "application/json");
+	}
 	const request = new Request(url.toString(), {
 		method: req.method,
 		headers,
