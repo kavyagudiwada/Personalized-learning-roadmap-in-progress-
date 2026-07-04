@@ -4,7 +4,9 @@ import { startGitHubOAuth, startGoogleOAuth } from "../services/oauth";
 import { useAuthStore } from "../store/auth-store";
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "../types/auth";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+const API_BASE_URL = rawApiUrl && rawApiUrl !== "" ? rawApiUrl : isLocal ? "http://localhost:5001" : "https://personalized-learning-roadmap-backend.onrender.com";
 
 export default function LoginPage() {
   const { login } = useAuthStore();
