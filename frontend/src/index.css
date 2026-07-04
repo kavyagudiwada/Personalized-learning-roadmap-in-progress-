@@ -1,3 +1,17 @@
 @import "tailwindcss";
 
+/* Dark mode dropdown fix */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #111827;
+  color: #ffffff;
+}
+
+select option:hover {
+  background-color: #7c3aed;
+}
+
 
