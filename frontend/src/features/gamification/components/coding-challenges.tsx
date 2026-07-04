@@ -331,7 +331,10 @@ const difficultyColors: Record<string, string> = {
 };
 
 function getApiBase(): string {
-  return import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+  const raw = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+  if (raw && raw !== "") return raw;
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  return isLocal ? "http://localhost:5001" : "https://personalized-learning-roadmap-backend.onrender.com";
 }
 
 async function runCodeOnBackend(
