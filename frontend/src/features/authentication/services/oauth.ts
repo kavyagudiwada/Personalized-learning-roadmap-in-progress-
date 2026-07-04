@@ -11,39 +11,27 @@ export function getGoogleOAuthRedirectUri() {
 }
 
 async function startSocialOAuth(provider: "google" | "github") {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/sign-in/social`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-     body: JSON.stringify({
-  provider,
-  callbackURL:
-    provider === "google"
-      ? getGoogleOAuthRedirectUri()
-      : getGitHubOAuthRedirectUri(),
-  disableRedirect: true,
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = `${API_BASE_URL}/api/auth/sign-in/social`;
 
-      }),
-    });
-    
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || err.message || `Failed to start ${provider} sign-in`);
-    }
-
-    const data = await response.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error("No authorization URL returned from server");
-    }
-  } catch (err) {
-    alert(
-      `Sign in with ${provider} failed: ${err instanceof Error ? err.message : "Unknown error"}`,
-    );
+  const inputs: Record<string, string> = {
+    provider,
+    callbackURL:
+      provider === "google"
+        ? getGoogleOAuthRedirectUri()
+        : getGitHubOAuthRedirectUri(),
+  };
+  for (const [key, value] of Object.entries(inputs)) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
   }
+
+  document.body.appendChild(form);
+  form.submit();
 }
 
 export function startGitHubOAuth() {

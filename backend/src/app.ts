@@ -42,6 +42,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth/callback", (req, _res, next) => {
 	console.log(`[Auth Callback Req] ${req.method} ${req.url} host=${req.headers.host} cookies:`, req.headers.cookie);
@@ -86,10 +87,11 @@ app.all("/api/auth/*", async (req, res) => {
 	const isSecure = req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
 	const allSetCookies = response.headers.getSetCookie();
 	if (allSetCookies.length > 0) {
-		console.log(`[Auth Proxy OUT] ${req.method} ${req.path} (isSecure=${isSecure}) — ${allSetCookies.length} cookie(s):`, allSetCookies);
+		console.log(`[Auth Proxy OUT original] ${req.method} ${req.path} (isSecure=${isSecure}) —`, allSetCookies);
 	}
 	for (const cookie of allSetCookies) {
 		const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
+		console.log(`[Auth Proxy OUT modified] ${req.method} ${req.path} —`, modified);
 		res.append("set-cookie", modified);
 	}
 		const text = await response.text();
