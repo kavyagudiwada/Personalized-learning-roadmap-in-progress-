@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import {
   analyzeResume,
   analyzeSkillGap,
+  saveResumeData,
   getAuthToken,
   type CareerGoal,
 } from "@/services/api";
@@ -89,6 +90,7 @@ export default function ResumeAnalysis({
       setResumeData(result);
       localStorage.setItem("learnflow_resume_data", JSON.stringify(result));
       localStorage.setItem("learnflow_career_goal", data.careerGoal);
+      await saveResumeData(result, data.careerGoal).catch(() => {});
       setSuccess(true);
       setActiveTab("overview");
     } catch (err: unknown) {
