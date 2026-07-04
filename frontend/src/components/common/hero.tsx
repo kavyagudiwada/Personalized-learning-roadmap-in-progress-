@@ -57,7 +57,7 @@ export default function hero() {
   initial={{ opacity: 0, y: 30 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.8 }}
-  className="text-center text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-4xl"
+  className="text-center text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-4xl text-[#171C4A]"
 >
   Accelerate Your
   <br />

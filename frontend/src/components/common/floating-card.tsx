@@ -25,11 +25,11 @@ export default function FloatingCard({
       }}
       className={`absolute rounded-[32px] p-8 shadow-lg ${className}`}
     >
-      <span className="bg-white/60 px-4 py-2 rounded-full text-xs font-semibold">
+      <span className="bg-white/60 px-4 py-2 rounded-full text-xs font-semibold text-[#171C4A]">
         {badge}
       </span>
 
-      <h3 className="text-3xl font-bold mt-6">{title}</h3>
+      <h3 className="text-3xl font-bold mt-6 text-[#171C4A]">{title}</h3>
 
       <p className="text-gray-600 mt-3">{subtitle}</p>
     </motion.div>
