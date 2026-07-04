@@ -79,6 +79,27 @@ app.all("/api/auth/*", async (req, res) => {
 	});
 	try {
 		const response = await auth.handler(request);
+		const isSecure = req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
+		const allSetCookies = response.headers.getSetCookie();
+		if (allSetCookies.length > 0) {
+			console.log(`[Auth Proxy OUT original] ${req.method} ${req.path} (isSecure=${isSecure}) —`, allSetCookies);
+		}
+		for (const cookie of allSetCookies) {
+			const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
+			res.append("set-cookie", modified);
+		}
+		const text = await response.text();
+		if (text && (response.headers.get("content-type") || "").includes("json")) {
+			try {
+				const data = JSON.parse(text);
+				if (data.url && data.redirect) {
+					res.status(302);
+					res.setHeader("location", data.url);
+					res.end();
+					return;
+				}
+			} catch { /* not JSON or unexpected shape */ }
+		}
 		res.status(response.status);
 		const contentType = response.headers.get("content-type");
 		if (contentType) res.setHeader("content-type", contentType);
@@ -87,22 +108,8 @@ app.all("/api/auth/*", async (req, res) => {
 			if (lower === "content-type" || lower === "set-cookie") return;
 			res.setHeader(key, value);
 		});
-	const isSecure = req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
-	const allSetCookies = response.headers.getSetCookie();
-	if (allSetCookies.length > 0) {
-		console.log(`[Auth Proxy OUT original] ${req.method} ${req.path} (isSecure=${isSecure}) —`, allSetCookies);
-	}
-	for (const cookie of allSetCookies) {
-		const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
-		console.log(`[Auth Proxy OUT modified] ${req.method} ${req.path} —`, modified);
-		res.append("set-cookie", modified);
-	}
-		const text = await response.text();
-		if (text) {
-			res.send(text);
-		} else {
-			res.end();
-		}
+		if (text) res.send(text);
+		else res.end();
 	} catch (err) {
 		console.error("Better Auth handler error:", err);
 		res.status(500).json({ error: "Internal server error" });
