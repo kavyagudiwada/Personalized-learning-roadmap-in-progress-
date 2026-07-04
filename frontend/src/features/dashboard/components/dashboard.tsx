@@ -89,8 +89,19 @@ export default function Dashboard() {
               </p>
           </div>
 
-          <div className="bg-[#171C4A] text-white px-6 py-4 rounded-3xl">
-            {dashboardData?.skillGap ? `${dashboardData.skillGap.matchScore}% Role Match` : "Get Started"}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate({ to: "/skill-gap" })}
+              className="bg-white text-[#171C4A] px-5 py-3 rounded-2xl font-bold text-sm shadow-lg hover:scale-[1.02] transition border border-gray-200"
+            >
+              View Skill Gap →
+            </button>
+            <button
+              onClick={() => navigate({ to: "/assessment" })}
+              className="bg-[#171C4A] text-white px-5 py-3 rounded-2xl font-bold text-sm shadow-lg hover:scale-[1.02] transition"
+            >
+              Take Assessment →
+            </button>
           </div>
         </div>
 
