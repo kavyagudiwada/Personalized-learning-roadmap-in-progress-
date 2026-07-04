@@ -10,8 +10,11 @@ export async function authenticateToken(
 	res: Response,
 	next: NextFunction,
 ) {
+	const headers = { ...req.headers } as Record<string, string>;
+	delete headers.cookie;
+	delete headers["cookie"];
 	const session = await auth.api.getSession({
-		headers: req.headers as Record<string, string>,
+		headers,
 	});
 
 	if (!session || !session.user) {

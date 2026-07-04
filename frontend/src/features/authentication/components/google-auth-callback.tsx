@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/features/authentication/hooks/use-auth";
 import { fetchSession } from "@/features/authentication/services/auth-service";
-import { type AuthUser } from "../types/auth";
+import { clearAuthStorage, type AuthUser } from "../types/auth";
 
 export default function GoogleAuthCallback() {
   const [status, setStatus] = useState("Authenticating with Google...");
@@ -23,6 +23,7 @@ export default function GoogleAuthCallback() {
       return;
     }
 
+    clearAuthStorage();
     setStatus("Getting session...");
 
     fetchSession()
