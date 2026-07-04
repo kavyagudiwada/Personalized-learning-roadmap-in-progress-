@@ -43,6 +43,11 @@ app.use(
 
 app.use(express.json({ limit: "15mb" }));
 
+app.use("/api/auth/callback", (req, _res, next) => {
+	console.log(`[Auth Callback Req] ${req.method} ${req.url} host=${req.headers.host} cookies:`, req.headers.cookie);
+	next();
+});
+
 app.all("/api/auth/*", async (req, res) => {
 	const host = req.headers.host || "localhost";
 	const url = new URL(req.url || "", `http://${host}`);
@@ -81,7 +86,7 @@ app.all("/api/auth/*", async (req, res) => {
 	const isSecure = req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
 	const allSetCookies = response.headers.getSetCookie();
 	if (allSetCookies.length > 0) {
-		console.log(`[Auth Proxy] ${req.method} ${req.path} — ${allSetCookies.length} cookie(s):`, allSetCookies.map((c) => c.split(";")[0]));
+		console.log(`[Auth Proxy OUT] ${req.method} ${req.path} (isSecure=${isSecure}) — ${allSetCookies.length} cookie(s):`, allSetCookies);
 	}
 	for (const cookie of allSetCookies) {
 		if (/^better-auth\.(session|bearer)/i.test(cookie)) {
