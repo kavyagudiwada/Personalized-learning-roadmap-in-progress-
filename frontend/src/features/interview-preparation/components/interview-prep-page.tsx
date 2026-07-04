@@ -310,6 +310,7 @@ export default function InterviewPrepPage() {
   const [genSearch, setGenSearch] = useState("");
   const [genPage, setGenPage] = useState(0);
   const PAGE_SIZE = 8;
+  const [genGenerated, setGenGenerated] = useState(false);
   const [savedQs, setSavedQs] = useState<Set<string>>(new Set());
   const [genShowHints, setGenShowHints] = useState<Record<number, boolean>>({});
 
@@ -357,6 +358,7 @@ export default function InterviewPrepPage() {
 
   // ---- Question Generator ------------------------------------------------
   const filteredQs = useMemo(() => {
+    if (!genGenerated) return [];
     const bank = getQuestionBanks()[selectedRole] || [];
     return bank.filter((q) => {
       if (genFilterCat !== "All" && q.cat !== genFilterCat) return false;
@@ -364,7 +366,7 @@ export default function InterviewPrepPage() {
       if (genSearch && !q.q.toLowerCase().includes(genSearch.toLowerCase())) return false;
       return true;
     });
-  }, [selectedRole, genFilterCat, genFilterDiff, genSearch]);
+  }, [selectedRole, genFilterCat, genFilterDiff, genSearch, genGenerated]);
 
   const pagedQs = useMemo(() => filteredQs.slice(genPage * PAGE_SIZE, (genPage + 1) * PAGE_SIZE), [filteredQs, genPage]);
   const totalPages = Math.max(1, Math.ceil(filteredQs.length / PAGE_SIZE));
@@ -372,6 +374,7 @@ export default function InterviewPrepPage() {
   function regenerate() {
     const fresh = buildQuestionBank(selectedRole);
     getQuestionBanks()[selectedRole] = fresh;
+    setGenGenerated(true);
     setGenPage(0);
     setGenShowHints({});
   }
@@ -605,7 +608,7 @@ export default function InterviewPrepPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 mb-5">
                   <div className="col-span-2 sm:col-span-1">
                     <label className="block text-[10px] text-gray-500 mb-1 font-medium uppercase tracking-wider">Role</label>
-                    <select value={selectedRole} onChange={(e) => { setSelectedRole(e.target.value); setGenPage(0); }}
+                    <select value={selectedRole} onChange={(e) => { setSelectedRole(e.target.value); setGenGenerated(false); setGenPage(0); }}
                       className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
                       {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                     </select>
@@ -646,10 +649,14 @@ export default function InterviewPrepPage() {
                 {/* Stats bar */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4 px-1">
                   <span className="text-xs text-gray-400">
-                    <strong className="text-white">{filteredQs.length}</strong> questions
-                    {genFilterCat !== "All" && <> · <span className="text-purple-300">{genFilterCat}</span></>}
-                    {genFilterDiff !== "All" && <> · <span className="text-purple-300">{genFilterDiff}</span></>}
-                    {savedQs.size > 0 && <> · <strong className="text-amber-400">{savedQs.size}</strong> saved</>}
+                    {genGenerated ? (
+                      <><strong className="text-white">{filteredQs.length}</strong> questions</>
+                    ) : (
+                      <span className="text-gray-500">Click <strong className="text-purple-300">Generate</strong> to start</span>
+                    )}
+                    {genGenerated && genFilterCat !== "All" && <> · <span className="text-purple-300">{genFilterCat}</span></>}
+                    {genGenerated && genFilterDiff !== "All" && <> · <span className="text-purple-300">{genFilterDiff}</span></>}
+                    {genGenerated && savedQs.size > 0 && <> · <strong className="text-amber-400">{savedQs.size}</strong> saved</>}
                   </span>
                   {totalPages > 1 && (
                     <div className="flex items-center gap-2 text-xs">
@@ -663,7 +670,13 @@ export default function InterviewPrepPage() {
                 </div>
 
                 {/* Questions */}
-                {pagedQs.length > 0 ? (
+                {!genGenerated ? (
+                  <div className="text-center py-16">
+                    <span className="text-5xl">⚡</span>
+                    <p className="text-gray-400 mt-4 text-sm font-medium">Select a role and click <strong className="text-purple-300">Generate</strong> to start</p>
+                    <p className="text-gray-600 mt-1 text-xs">100+ questions tailored to your role, filtered by category &amp; difficulty</p>
+                  </div>
+                ) : pagedQs.length > 0 ? (
                   <div className="space-y-2.5">
                     {pagedQs.map((item, i) => (
                       <motion.div key={genPage * PAGE_SIZE + i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
