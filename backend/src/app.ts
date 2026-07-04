@@ -11,6 +11,7 @@ import githubRoutes from "@/features/users/routes/github-routes";
 import resumeRoutes from "@/features/users/routes/resume-routes";
 import { chatbotRoutes } from "@/features/chatbot";
 import { roadmapRoutes } from "@/features/roadmap-generator";
+import { codingRoutes } from "@/features/coding-challenge";
 import { refreshMarketProfilesController } from "@/features/recommendations/controllers/admin-market-controller";
 import { authenticateToken } from "@/middleware/authenticate";
 import { requireRole } from "@/middleware/rbac";
@@ -19,25 +20,21 @@ import { errorHandler } from "@/middleware/error-handler";
 const app = express();
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "http://localhost:5173",
-  "http://localhost:3000",
-].filter(Boolean);
+	process.env.FRONTEND_URL || "http://localhost:5173",
+	"http://localhost:5173",
+	"http://localhost:3000",
+];
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
+	cors({
+		origin: (origin, callback) => {
+			if (!origin) return callback(null, true);
+			if (allowedOrigins.includes(origin)) return callback(null, true);
+			callback(new Error(`CORS blocked: ${origin}`));
+		},
+		credentials: true,
+	}),
 );
-
-
 
 app.use(express.json({ limit: "15mb" }));
 
@@ -105,12 +102,13 @@ app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/admin/resources", adminResourceRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/roadmap", roadmapRoutes);
+app.use("/api/coding", codingRoutes);
 
-// const frontendDist = path.join(__dirname, "../../frontend/dist");
-// app.use(express.static(frontendDist));
-// app.get("*", (_req, res) => {
-// 	res.sendFile(path.join(frontendDist, "index.html"));
-// });
+const frontendDist = path.join(__dirname, "../../frontend/dist");
+app.use(express.static(frontendDist));
+app.get("*", (_req, res) => {
+	res.sendFile(path.join(frontendDist, "index.html"));
+});
 
 const adminMarketRouter = express.Router();
 adminMarketRouter.use(authenticateToken);
