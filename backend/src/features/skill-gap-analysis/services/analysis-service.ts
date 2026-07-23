@@ -2,14 +2,17 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/database";
 import { persistResultsNode } from "@/features/ai-agents/services/persist-service";
 import { resourceRecommendationNode } from "@/features/ai-agents/services/resource-service";
-import { resolveAliases } from "@/utils/skill-matching";
-import { callAI } from "@/services/ai-service";
 import type { AgentState } from "@/features/ai-agents/types/agent.types";
-import { getMarketProfile, mergeProfiles } from "@/services/job-market/market-profile-service";
+import { callAI } from "@/services/ai-service";
+import {
+	getMarketProfile,
+	mergeProfiles,
+} from "@/services/job-market/market-profile-service";
 import {
 	extractSkillGapDetails,
 	validateResumePdf,
 } from "@/services/resume-service";
+import { resolveAliases } from "@/utils/skill-matching";
 import type {
 	AnalyzeSkillGapResponse,
 	LatestSkillGapResponse,
@@ -17,6 +20,10 @@ import type {
 	SkillGapAnalysisResult,
 	WeightedSkill,
 } from "../types/skill-gap.types";
+import type {
+	CareerGoalProfile,
+	ExperienceLevel,
+} from "./career-goals-service";
 import {
 	categorizeSkillsForGoal,
 	computeGapPriority,
@@ -25,7 +32,6 @@ import {
 	inferExperienceLevel,
 	inferSkillsFromRepos,
 } from "./career-goals-service";
-import type { CareerGoalProfile, ExperienceLevel } from "./career-goals-service";
 
 export function buildResumeAnalysisPrompt(careerGoal: string): string {
 	const profile = getCareerProfile(careerGoal);
@@ -173,16 +179,18 @@ export function buildMockResumeAnalysis(
 	careerGoal: string,
 ): ResumeAnalysisResult {
 	const profile = getCareerProfile(careerGoal);
-	const commonSkills = resolveAliases(["Git", "Communication", "Problem Solving"]);
+	const commonSkills = resolveAliases([
+		"Git",
+		"Communication",
+		"Problem Solving",
+	]);
 	const goalSkills = resolveAliases([
 		...profile.coreSkills.slice(0, 3),
 		...profile.tools.slice(0, 2),
 	]);
 	const baseSkills = [...new Set([...commonSkills, ...goalSkills])];
 	const matched = profile.coreSkills.filter((s) =>
-		baseSkills.some((b) =>
-			b.toLowerCase() === s.toLowerCase(),
-		),
+		baseSkills.some((b) => b.toLowerCase() === s.toLowerCase()),
 	);
 
 	return {
@@ -240,28 +248,45 @@ export function buildMockSkillGap(
 	experience?: { role: string; company: string; duration: string }[],
 	_education?: { degree: string; school: string; year: string }[],
 	experienceLevel?: ExperienceLevel,
-	customWeights?: { weightedSkills: WeightedSkill[]; coreSkills: string[]; tools: string[] },
+	customWeights?: {
+		weightedSkills: WeightedSkill[];
+		coreSkills: string[];
+		tools: string[];
+	},
 	repoSkills?: Set<string>,
 	seniorityPostingSkills?: Set<string>,
 ): SkillGapAnalysisResult {
 	const level = experienceLevel || inferExperienceLevel(experience);
 	const { profile, strong, improving, weak, skillCategories, gapPriority } =
-		categorizeSkillsForGoal(skills, careerGoal, level, customWeights, repoSkills, seniorityPostingSkills);
+		categorizeSkillsForGoal(
+			skills,
+			careerGoal,
+			level,
+			customWeights,
+			repoSkills,
+			seniorityPostingSkills,
+		);
 
 	const priorityGaps = weak.slice(0, 5).map((skill, i) => {
 		const inMarket = seniorityPostingSkills?.has(skill);
 		return {
 			skill,
-			importance: (inMarket
-				? i < 2 ? "high" : "medium"
-				: "low") as "high" | "medium" | "low",
+			importance: (inMarket ? (i < 2 ? "high" : "medium") : "low") as
+				| "high"
+				| "medium"
+				| "low",
 			reason: inMarket
 				? `Appears in ${level} job postings — market-critical for ${careerGoal}`
 				: `Nice-to-have for ${careerGoal} — adds hiring advantage at ${level} level`,
 		};
 	});
 
-	const { matchScore: weightedScore } = computeMatchScore(skills, careerGoal, level, customWeights?.weightedSkills);
+	const { matchScore: weightedScore } = computeMatchScore(
+		skills,
+		careerGoal,
+		level,
+		customWeights?.weightedSkills,
+	);
 	const matchScore = weightedScore;
 
 	const expNote =
@@ -277,9 +302,10 @@ export function buildMockSkillGap(
 		const inMarket = seniorityPostingSkills?.has(skill);
 		return {
 			skill,
-			importance: (inMarket
-				? i < 2 ? "high" : "medium"
-				: "low") as "high" | "medium" | "low",
+			importance: (inMarket ? (i < 2 ? "high" : "medium") : "low") as
+				| "high"
+				| "medium"
+				| "low",
 			reason: inMarket
 				? `Appears in ${level} job postings — market-critical for ${careerGoal}`
 				: `Nice-to-have for ${careerGoal} — adds hiring advantage at ${level} level`,
@@ -298,10 +324,12 @@ export function buildMockSkillGap(
 		gapPriority: finalGapPriority,
 		priorityGaps: finalPriorityGaps,
 		skillCategories,
-		roadmap: roadmapsByGoal[careerGoal] || buildDefaultRoadmap(profile, careerGoal),
-		coach: strongList.length > 0
-			? `You're on a solid path toward ${careerGoal}.${expNote} Your strongest areas include ${strongList.slice(0, 3).join(", ")}. Prioritize closing gaps in ${weak.slice(0, 3).join(", ") || "role-specific tools"} through focused projects and structured learning over the next ${profile.typicalTimeline}.`
-			: `You're building toward ${careerGoal}.${expNote} Focus on ${improving.slice(0, 3).join(", ") || profile.coreSkills.slice(0, 3).join(", ")} to strengthen your foundation. Prioritize closing gaps in ${weak.slice(0, 3).join(", ") || "role-specific tools"} through focused projects and structured learning over the next ${profile.typicalTimeline}.`,
+		roadmap:
+			roadmapsByGoal[careerGoal] || buildDefaultRoadmap(profile, careerGoal),
+		coach:
+			strongList.length > 0
+				? `You're on a solid path toward ${careerGoal}.${expNote} Your strongest areas include ${strongList.slice(0, 3).join(", ")}. Prioritize closing gaps in ${weak.slice(0, 3).join(", ") || "role-specific tools"} through focused projects and structured learning over the next ${profile.typicalTimeline}.`
+				: `You're building toward ${careerGoal}.${expNote} Focus on ${improving.slice(0, 3).join(", ") || profile.coreSkills.slice(0, 3).join(", ")} to strengthen your foundation. Prioritize closing gaps in ${weak.slice(0, 3).join(", ") || "role-specific tools"} through focused projects and structured learning over the next ${profile.typicalTimeline}.`,
 		timeToGoal: profile.typicalTimeline,
 		recommendedCertifications: profile.certifications.slice(0, 3),
 		projectIdeas: [
@@ -460,95 +488,625 @@ function buildMockAssessment(careerGoal: string) {
 			},
 		],
 		"Frontend Engineer": [
-			{ question: "Which hook is used for side effects in React?", options: ["useEffect", "useState", "useContext", "useReducer"], answer: "useEffect" },
-			{ question: "What does CSS Flexbox primarily handle?", options: ["One-dimensional layout", "Two-dimensional layout", "Animation", "Database queries"], answer: "One-dimensional layout" },
-			{ question: "What is the virtual DOM?", options: ["A lightweight copy of the real DOM", "The browser's rendering engine", "A database for components", "A CSS framework"], answer: "A lightweight copy of the real DOM" },
-			{ question: "Next.js is primarily a...", options: ["React framework", "CSS preprocessor", "Database ORM", "Testing library"], answer: "React framework" },
-			{ question: "What does WCAG stand for?", options: ["Web Content Accessibility Guidelines", "Web Component Animation Grid", "Wireless Communication Access Gateway", "World CSS Accessibility Group"], answer: "Web Content Accessibility Guidelines" },
+			{
+				question: "Which hook is used for side effects in React?",
+				options: ["useEffect", "useState", "useContext", "useReducer"],
+				answer: "useEffect",
+			},
+			{
+				question: "What does CSS Flexbox primarily handle?",
+				options: [
+					"One-dimensional layout",
+					"Two-dimensional layout",
+					"Animation",
+					"Database queries",
+				],
+				answer: "One-dimensional layout",
+			},
+			{
+				question: "What is the virtual DOM?",
+				options: [
+					"A lightweight copy of the real DOM",
+					"The browser's rendering engine",
+					"A database for components",
+					"A CSS framework",
+				],
+				answer: "A lightweight copy of the real DOM",
+			},
+			{
+				question: "Next.js is primarily a...",
+				options: [
+					"React framework",
+					"CSS preprocessor",
+					"Database ORM",
+					"Testing library",
+				],
+				answer: "React framework",
+			},
+			{
+				question: "What does WCAG stand for?",
+				options: [
+					"Web Content Accessibility Guidelines",
+					"Web Component Animation Grid",
+					"Wireless Communication Access Gateway",
+					"World CSS Accessibility Group",
+				],
+				answer: "Web Content Accessibility Guidelines",
+			},
 		],
 		"Backend Engineer": [
-			{ question: "Which HTTP method is idempotent?", options: ["PUT", "POST", "PATCH", "DELETE"], answer: "PUT" },
-			{ question: "What is a database index used for?", options: ["Speed up queries", "Store backups", "Encrypt data", "Manage users"], answer: "Speed up queries" },
-			{ question: "What does ACID stand for in databases?", options: ["Atomicity, Consistency, Isolation, Durability", "Automated, Consistent, Integrated, Durable", "Access, Control, Integrity, Data", "Async, Concurrent, Isolated, Distributed"], answer: "Atomicity, Consistency, Isolation, Durability" },
-			{ question: "What is a reverse proxy?", options: ["A server that forwards requests to backend servers", "A database replica", "A client-side cache", "A load testing tool"], answer: "A server that forwards requests to backend servers" },
-			{ question: "Which of these is a message queue system?", options: ["Kafka", "PostgreSQL", "Redis", "Nginx"], answer: "Kafka" },
+			{
+				question: "Which HTTP method is idempotent?",
+				options: ["PUT", "POST", "PATCH", "DELETE"],
+				answer: "PUT",
+			},
+			{
+				question: "What is a database index used for?",
+				options: [
+					"Speed up queries",
+					"Store backups",
+					"Encrypt data",
+					"Manage users",
+				],
+				answer: "Speed up queries",
+			},
+			{
+				question: "What does ACID stand for in databases?",
+				options: [
+					"Atomicity, Consistency, Isolation, Durability",
+					"Automated, Consistent, Integrated, Durable",
+					"Access, Control, Integrity, Data",
+					"Async, Concurrent, Isolated, Distributed",
+				],
+				answer: "Atomicity, Consistency, Isolation, Durability",
+			},
+			{
+				question: "What is a reverse proxy?",
+				options: [
+					"A server that forwards requests to backend servers",
+					"A database replica",
+					"A client-side cache",
+					"A load testing tool",
+				],
+				answer: "A server that forwards requests to backend servers",
+			},
+			{
+				question: "Which of these is a message queue system?",
+				options: ["Kafka", "PostgreSQL", "Redis", "Nginx"],
+				answer: "Kafka",
+			},
 		],
 		"Full-Stack Developer": [
-			{ question: "What is CORS?", options: ["Cross-Origin Resource Sharing", "Central Object Routing System", "Component Order Resolution Standard", "Code Optimization Runtime Service"], answer: "Cross-Origin Resource Sharing" },
-			{ question: "Which database is document-oriented?", options: ["MongoDB", "PostgreSQL", "MySQL", "SQLite"], answer: "MongoDB" },
-			{ question: "What is a JWT?", options: ["JSON Web Token", "Java Web Tool", "JavaScript Widget Template", "JSON Workflow Trigger"], answer: "JSON Web Token" },
-			{ question: "What does CI/CD stand for?", options: ["Continuous Integration / Continuous Deployment", "Code Integration / Code Delivery", "Continuous Improvement / Continuous Development", "Compiled Implementation / Compiled Deployment"], answer: "Continuous Integration / Continuous Deployment" },
-			{ question: "Which hook manages local state in React?", options: ["useState", "useEffect", "useRef", "useMemo"], answer: "useState" },
+			{
+				question: "What is CORS?",
+				options: [
+					"Cross-Origin Resource Sharing",
+					"Central Object Routing System",
+					"Component Order Resolution Standard",
+					"Code Optimization Runtime Service",
+				],
+				answer: "Cross-Origin Resource Sharing",
+			},
+			{
+				question: "Which database is document-oriented?",
+				options: ["MongoDB", "PostgreSQL", "MySQL", "SQLite"],
+				answer: "MongoDB",
+			},
+			{
+				question: "What is a JWT?",
+				options: [
+					"JSON Web Token",
+					"Java Web Tool",
+					"JavaScript Widget Template",
+					"JSON Workflow Trigger",
+				],
+				answer: "JSON Web Token",
+			},
+			{
+				question: "What does CI/CD stand for?",
+				options: [
+					"Continuous Integration / Continuous Deployment",
+					"Code Integration / Code Delivery",
+					"Continuous Improvement / Continuous Development",
+					"Compiled Implementation / Compiled Deployment",
+				],
+				answer: "Continuous Integration / Continuous Deployment",
+			},
+			{
+				question: "Which hook manages local state in React?",
+				options: ["useState", "useEffect", "useRef", "useMemo"],
+				answer: "useState",
+			},
 		],
 		"DevOps / Platform Engineer": [
-			{ question: "What is Kubernetes used for?", options: ["Container orchestration", "Database management", "Frontend rendering", "API development"], answer: "Container orchestration" },
-			{ question: "What does IaC stand for?", options: ["Infrastructure as Code", "Integration as Container", "Interface as Configuration", "Infrastructure as Compute"], answer: "Infrastructure as Code" },
-			{ question: "Which tool is used for infrastructure provisioning?", options: ["Terraform", "Jest", "Webpack", "Babel"], answer: "Terraform" },
-			{ question: "What is a pod in Kubernetes?", options: ["The smallest deployable unit", "A load balancer", "A storage volume", "A network policy"], answer: "The smallest deployable unit" },
-			{ question: "Prometheus is used for...", options: ["Monitoring and alerting", "Container runtime", "CI/CD pipelines", "Secret management"], answer: "Monitoring and alerting" },
+			{
+				question: "What is Kubernetes used for?",
+				options: [
+					"Container orchestration",
+					"Database management",
+					"Frontend rendering",
+					"API development",
+				],
+				answer: "Container orchestration",
+			},
+			{
+				question: "What does IaC stand for?",
+				options: [
+					"Infrastructure as Code",
+					"Integration as Container",
+					"Interface as Configuration",
+					"Infrastructure as Compute",
+				],
+				answer: "Infrastructure as Code",
+			},
+			{
+				question: "Which tool is used for infrastructure provisioning?",
+				options: ["Terraform", "Jest", "Webpack", "Babel"],
+				answer: "Terraform",
+			},
+			{
+				question: "What is a pod in Kubernetes?",
+				options: [
+					"The smallest deployable unit",
+					"A load balancer",
+					"A storage volume",
+					"A network policy",
+				],
+				answer: "The smallest deployable unit",
+			},
+			{
+				question: "Prometheus is used for...",
+				options: [
+					"Monitoring and alerting",
+					"Container runtime",
+					"CI/CD pipelines",
+					"Secret management",
+				],
+				answer: "Monitoring and alerting",
+			},
 		],
 		"Software Engineer (Product-Based Companies)": [
-			{ question: "What is the time complexity of binary search?", options: ["O(log n)", "O(n)", "O(n²)", "O(1)"], answer: "O(log n)" },
-			{ question: "What data structure uses FIFO?", options: ["Queue", "Stack", "Tree", "Graph"], answer: "Queue" },
-			{ question: "What is a hash collision?", options: ["Two keys produce the same hash", "A database failure", "A network error", "A type mismatch"], answer: "Two keys produce the same hash" },
-			{ question: "Which design pattern ensures a class has only one instance?", options: ["Singleton", "Factory", "Observer", "Decorator"], answer: "Singleton" },
-			{ question: "What is load balancing?", options: ["Distributing traffic across servers", "Optimizing database queries", "Compressing files", "Minifying code"], answer: "Distributing traffic across servers" },
+			{
+				question: "What is the time complexity of binary search?",
+				options: ["O(log n)", "O(n)", "O(n²)", "O(1)"],
+				answer: "O(log n)",
+			},
+			{
+				question: "What data structure uses FIFO?",
+				options: ["Queue", "Stack", "Tree", "Graph"],
+				answer: "Queue",
+			},
+			{
+				question: "What is a hash collision?",
+				options: [
+					"Two keys produce the same hash",
+					"A database failure",
+					"A network error",
+					"A type mismatch",
+				],
+				answer: "Two keys produce the same hash",
+			},
+			{
+				question: "Which design pattern ensures a class has only one instance?",
+				options: ["Singleton", "Factory", "Observer", "Decorator"],
+				answer: "Singleton",
+			},
+			{
+				question: "What is load balancing?",
+				options: [
+					"Distributing traffic across servers",
+					"Optimizing database queries",
+					"Compressing files",
+					"Minifying code",
+				],
+				answer: "Distributing traffic across servers",
+			},
 		],
 		"Data Analyst": [
-			{ question: "What SQL clause filters grouped data?", options: ["HAVING", "WHERE", "FILTER", "GROUP"], answer: "HAVING" },
-			{ question: "What does a JOIN do in SQL?", options: ["Combines rows from two tables", "Creates a new table", "Deletes duplicate rows", "Sorts results"], answer: "Combines rows from two tables" },
-			{ question: "What is a primary key?", options: ["A unique identifier for a row", "A foreign reference", "An index", "A constraint"], answer: "A unique identifier for a row" },
-			{ question: "What does p-value represent?", options: ["Probability of observing data given null hypothesis", "The effect size", "Sample mean", "Standard deviation"], answer: "Probability of observing data given null hypothesis" },
-			{ question: "Tableau is primarily used for...", options: ["Data visualization", "Database management", "ETL pipelines", "Machine learning"], answer: "Data visualization" },
+			{
+				question: "What SQL clause filters grouped data?",
+				options: ["HAVING", "WHERE", "FILTER", "GROUP"],
+				answer: "HAVING",
+			},
+			{
+				question: "What does a JOIN do in SQL?",
+				options: [
+					"Combines rows from two tables",
+					"Creates a new table",
+					"Deletes duplicate rows",
+					"Sorts results",
+				],
+				answer: "Combines rows from two tables",
+			},
+			{
+				question: "What is a primary key?",
+				options: [
+					"A unique identifier for a row",
+					"A foreign reference",
+					"An index",
+					"A constraint",
+				],
+				answer: "A unique identifier for a row",
+			},
+			{
+				question: "What does p-value represent?",
+				options: [
+					"Probability of observing data given null hypothesis",
+					"The effect size",
+					"Sample mean",
+					"Standard deviation",
+				],
+				answer: "Probability of observing data given null hypothesis",
+			},
+			{
+				question: "Tableau is primarily used for...",
+				options: [
+					"Data visualization",
+					"Database management",
+					"ETL pipelines",
+					"Machine learning",
+				],
+				answer: "Data visualization",
+			},
 		],
 		"Data Engineer": [
-			{ question: "What is an ETL pipeline?", options: ["Extract, Transform, Load", "Eliminate, Test, Log", "Encrypt, Transfer, Link", "Evaluate, Transform, Load"], answer: "Extract, Transform, Load" },
-			{ question: "Apache Spark is used for...", options: ["Distributed data processing", "Web development", "Mobile apps", "Design"], answer: "Distributed data processing" },
-			{ question: "What is a data warehouse?", options: ["Central repository for analytics data", "A physical storage device", "A caching layer", "A message queue"], answer: "Central repository for analytics data" },
-			{ question: "dbt is primarily used for...", options: ["Data transformations", "Data visualization", "Orchestration", "Streaming"], answer: "Data transformations" },
-			{ question: "What is Apache Kafka?", options: ["A distributed streaming platform", "A SQL database", "A frontend framework", "A testing tool"], answer: "A distributed streaming platform" },
+			{
+				question: "What is an ETL pipeline?",
+				options: [
+					"Extract, Transform, Load",
+					"Eliminate, Test, Log",
+					"Encrypt, Transfer, Link",
+					"Evaluate, Transform, Load",
+				],
+				answer: "Extract, Transform, Load",
+			},
+			{
+				question: "Apache Spark is used for...",
+				options: [
+					"Distributed data processing",
+					"Web development",
+					"Mobile apps",
+					"Design",
+				],
+				answer: "Distributed data processing",
+			},
+			{
+				question: "What is a data warehouse?",
+				options: [
+					"Central repository for analytics data",
+					"A physical storage device",
+					"A caching layer",
+					"A message queue",
+				],
+				answer: "Central repository for analytics data",
+			},
+			{
+				question: "dbt is primarily used for...",
+				options: [
+					"Data transformations",
+					"Data visualization",
+					"Orchestration",
+					"Streaming",
+				],
+				answer: "Data transformations",
+			},
+			{
+				question: "What is Apache Kafka?",
+				options: [
+					"A distributed streaming platform",
+					"A SQL database",
+					"A frontend framework",
+					"A testing tool",
+				],
+				answer: "A distributed streaming platform",
+			},
 		],
 		"Mobile Developer": [
-			{ question: "Swift is used primarily for...", options: ["iOS development", "Android development", "Web development", "Data science"], answer: "iOS development" },
-			{ question: "What is Jetpack Compose?", options: ["Android's modern UI toolkit", "A Kotlin compiler", "A dependency injector", "A testing framework"], answer: "Android's modern UI toolkit" },
-			{ question: "What is an APK?", options: ["Android Package Kit", "Application Program Key", "Active Process Kernel", "Apple Package Kit"], answer: "Android Package Kit" },
-			{ question: "What does React Native allow?", options: ["Build mobile apps with JavaScript", "Build web apps only", "Manage databases", "Design UI mockups"], answer: "Build mobile apps with JavaScript" },
-			{ question: "What is App Store Connect used for?", options: ["Managing iOS app submissions", "Android app deployment", "Web hosting", "Database management"], answer: "Managing iOS app submissions" },
+			{
+				question: "Swift is used primarily for...",
+				options: [
+					"iOS development",
+					"Android development",
+					"Web development",
+					"Data science",
+				],
+				answer: "iOS development",
+			},
+			{
+				question: "What is Jetpack Compose?",
+				options: [
+					"Android's modern UI toolkit",
+					"A Kotlin compiler",
+					"A dependency injector",
+					"A testing framework",
+				],
+				answer: "Android's modern UI toolkit",
+			},
+			{
+				question: "What is an APK?",
+				options: [
+					"Android Package Kit",
+					"Application Program Key",
+					"Active Process Kernel",
+					"Apple Package Kit",
+				],
+				answer: "Android Package Kit",
+			},
+			{
+				question: "What does React Native allow?",
+				options: [
+					"Build mobile apps with JavaScript",
+					"Build web apps only",
+					"Manage databases",
+					"Design UI mockups",
+				],
+				answer: "Build mobile apps with JavaScript",
+			},
+			{
+				question: "What is App Store Connect used for?",
+				options: [
+					"Managing iOS app submissions",
+					"Android app deployment",
+					"Web hosting",
+					"Database management",
+				],
+				answer: "Managing iOS app submissions",
+			},
 		],
 		"Data Scientist": [
-			{ question: "What is overfitting?", options: ["Model performs well on training but poorly on test data", "Model is too simple", "Data is too large", "Learning rate is zero"], answer: "Model performs well on training but poorly on test data" },
-			{ question: "What is the purpose of cross-validation?", options: ["Estimate model generalization", "Reduce training time", "Increase dataset size", "Remove outliers"], answer: "Estimate model generalization" },
-			{ question: "Which metric is best for imbalanced classification?", options: ["F1 Score", "Accuracy", "MSE", "R²"], answer: "F1 Score" },
-			{ question: "What is A/B testing?", options: ["Comparing two versions to determine which performs better", "Testing database performance", "A security audit method", "A deployment strategy"], answer: "Comparing two versions to determine which performs better" },
-			{ question: "What does causal inference aim to do?", options: ["Determine cause-and-effect relationships", "Correlate variables", "Classify data", "Cluster observations"], answer: "Determine cause-and-effect relationships" },
+			{
+				question: "What is overfitting?",
+				options: [
+					"Model performs well on training but poorly on test data",
+					"Model is too simple",
+					"Data is too large",
+					"Learning rate is zero",
+				],
+				answer: "Model performs well on training but poorly on test data",
+			},
+			{
+				question: "What is the purpose of cross-validation?",
+				options: [
+					"Estimate model generalization",
+					"Reduce training time",
+					"Increase dataset size",
+					"Remove outliers",
+				],
+				answer: "Estimate model generalization",
+			},
+			{
+				question: "Which metric is best for imbalanced classification?",
+				options: ["F1 Score", "Accuracy", "MSE", "R²"],
+				answer: "F1 Score",
+			},
+			{
+				question: "What is A/B testing?",
+				options: [
+					"Comparing two versions to determine which performs better",
+					"Testing database performance",
+					"A security audit method",
+					"A deployment strategy",
+				],
+				answer: "Comparing two versions to determine which performs better",
+			},
+			{
+				question: "What does causal inference aim to do?",
+				options: [
+					"Determine cause-and-effect relationships",
+					"Correlate variables",
+					"Classify data",
+					"Cluster observations",
+				],
+				answer: "Determine cause-and-effect relationships",
+			},
 		],
 		"Site Reliability Engineer (SRE)": [
-			{ question: "What is an SLO?", options: ["Service Level Objective", "System Load Optimizer", "Server Log Output", "Secure Login Operation"], answer: "Service Level Objective" },
-			{ question: "What is an error budget?", options: ["The acceptable amount of downtime", "A financial budget for errors", "The number of bugs allowed", "A testing metric"], answer: "The acceptable amount of downtime" },
-			{ question: "What is chaos engineering?", options: ["Testing system resilience by injecting failures", "Random server shutdowns", "A deployment strategy", "A monitoring tool"], answer: "Testing system resilience by injecting failures" },
-			{ question: "What does a postmortem document?", options: ["Incident analysis and follow-up actions", "Project timeline", "Budget report", "Feature specification"], answer: "Incident analysis and follow-up actions" },
-			{ question: "Prometheus is used for...", options: ["Monitoring and alerting", "Container runtime", "CI/CD pipelines", "Secret management"], answer: "Monitoring and alerting" },
+			{
+				question: "What is an SLO?",
+				options: [
+					"Service Level Objective",
+					"System Load Optimizer",
+					"Server Log Output",
+					"Secure Login Operation",
+				],
+				answer: "Service Level Objective",
+			},
+			{
+				question: "What is an error budget?",
+				options: [
+					"The acceptable amount of downtime",
+					"A financial budget for errors",
+					"The number of bugs allowed",
+					"A testing metric",
+				],
+				answer: "The acceptable amount of downtime",
+			},
+			{
+				question: "What is chaos engineering?",
+				options: [
+					"Testing system resilience by injecting failures",
+					"Random server shutdowns",
+					"A deployment strategy",
+					"A monitoring tool",
+				],
+				answer: "Testing system resilience by injecting failures",
+			},
+			{
+				question: "What does a postmortem document?",
+				options: [
+					"Incident analysis and follow-up actions",
+					"Project timeline",
+					"Budget report",
+					"Feature specification",
+				],
+				answer: "Incident analysis and follow-up actions",
+			},
+			{
+				question: "Prometheus is used for...",
+				options: [
+					"Monitoring and alerting",
+					"Container runtime",
+					"CI/CD pipelines",
+					"Secret management",
+				],
+				answer: "Monitoring and alerting",
+			},
 		],
 		"UI/UX Designer": [
-			{ question: "What is a wireframe?", options: ["A low-fidelity layout of a page", "A high-fidelity prototype", "A color palette", "A font family"], answer: "A low-fidelity layout of a page" },
-			{ question: "What does usability testing measure?", options: ["How easy a product is to use", "How fast a page loads", "How secure an app is", "How much storage is used"], answer: "How easy a product is to use" },
-			{ question: "What is a design system?", options: ["A collection of reusable components and guidelines", "A color picker tool", "A font library", "A prototyping tool"], answer: "A collection of reusable components and guidelines" },
-			{ question: "What is information architecture?", options: ["Organizing and structuring content", "Designing databases", "Building APIs", "Writing code"], answer: "Organizing and structuring content" },
-			{ question: "Figma is primarily used for...", options: ["Interface design and prototyping", "Code editing", "Database management", "Server deployment"], answer: "Interface design and prototyping" },
+			{
+				question: "What is a wireframe?",
+				options: [
+					"A low-fidelity layout of a page",
+					"A high-fidelity prototype",
+					"A color palette",
+					"A font family",
+				],
+				answer: "A low-fidelity layout of a page",
+			},
+			{
+				question: "What does usability testing measure?",
+				options: [
+					"How easy a product is to use",
+					"How fast a page loads",
+					"How secure an app is",
+					"How much storage is used",
+				],
+				answer: "How easy a product is to use",
+			},
+			{
+				question: "What is a design system?",
+				options: [
+					"A collection of reusable components and guidelines",
+					"A color picker tool",
+					"A font library",
+					"A prototyping tool",
+				],
+				answer: "A collection of reusable components and guidelines",
+			},
+			{
+				question: "What is information architecture?",
+				options: [
+					"Organizing and structuring content",
+					"Designing databases",
+					"Building APIs",
+					"Writing code",
+				],
+				answer: "Organizing and structuring content",
+			},
+			{
+				question: "Figma is primarily used for...",
+				options: [
+					"Interface design and prototyping",
+					"Code editing",
+					"Database management",
+					"Server deployment",
+				],
+				answer: "Interface design and prototyping",
+			},
 		],
 		"Product Manager": [
-			{ question: "What is a PRD?", options: ["Product Requirements Document", "Performance Review Document", "Project Resource Dashboard", "Product Return Directive"], answer: "Product Requirements Document" },
-			{ question: "What are OKRs?", options: ["Objectives and Key Results", "Operational Key Resources", "Organizational Knowledge Reports", "Outcome Key Requirements"], answer: "Objectives and Key Results" },
-			{ question: "What is a user story?", options: ["A short description of a feature from user perspective", "A technical specification", "A bug report", "A design mockup"], answer: "A short description of a feature from user perspective" },
-			{ question: "What does A/B testing help determine?", options: ["Which version performs better", "Which server is faster", "Which database is more reliable", "Which API is more secure"], answer: "Which version performs better" },
-			{ question: "What is a roadmap?", options: ["A strategic plan for product development", "A list of bugs to fix", "A design file", "A marketing plan"], answer: "A strategic plan for product development" },
+			{
+				question: "What is a PRD?",
+				options: [
+					"Product Requirements Document",
+					"Performance Review Document",
+					"Project Resource Dashboard",
+					"Product Return Directive",
+				],
+				answer: "Product Requirements Document",
+			},
+			{
+				question: "What are OKRs?",
+				options: [
+					"Objectives and Key Results",
+					"Operational Key Resources",
+					"Organizational Knowledge Reports",
+					"Outcome Key Requirements",
+				],
+				answer: "Objectives and Key Results",
+			},
+			{
+				question: "What is a user story?",
+				options: [
+					"A short description of a feature from user perspective",
+					"A technical specification",
+					"A bug report",
+					"A design mockup",
+				],
+				answer: "A short description of a feature from user perspective",
+			},
+			{
+				question: "What does A/B testing help determine?",
+				options: [
+					"Which version performs better",
+					"Which server is faster",
+					"Which database is more reliable",
+					"Which API is more secure",
+				],
+				answer: "Which version performs better",
+			},
+			{
+				question: "What is a roadmap?",
+				options: [
+					"A strategic plan for product development",
+					"A list of bugs to fix",
+					"A design file",
+					"A marketing plan",
+				],
+				answer: "A strategic plan for product development",
+			},
 		],
 		"Forward Deployed Engineer": [
-			{ question: "What is an MVP?", options: ["Minimum Viable Product", "Most Valuable Player", "Maximum Velocity Protocol", "Managed Virtual Platform"], answer: "Minimum Viable Product" },
-			{ question: "What is API integration?", options: ["Connecting systems through their APIs", "Designing user interfaces", "Managing databases", "Writing documentation"], answer: "Connecting systems through their APIs" },
-			{ question: "What is CI/CD?", options: ["Continuous Integration and Continuous Deployment", "Code Implementation and Code Design", "Continuous Improvement and Continuous Delivery", "Compiled Integration and Compiled Deployment"], answer: "Continuous Integration and Continuous Deployment" },
-			{ question: "What is a POC?", options: ["Proof of Concept", "Point of Contact", "Process of Compilation", "Product Optimization Cycle"], answer: "Proof of Concept" },
-			{ question: "Terraform is used for...", options: ["Infrastructure provisioning", "Container orchestration", "Frontend development", "Data analysis"], answer: "Infrastructure provisioning" },
+			{
+				question: "What is an MVP?",
+				options: [
+					"Minimum Viable Product",
+					"Most Valuable Player",
+					"Maximum Velocity Protocol",
+					"Managed Virtual Platform",
+				],
+				answer: "Minimum Viable Product",
+			},
+			{
+				question: "What is API integration?",
+				options: [
+					"Connecting systems through their APIs",
+					"Designing user interfaces",
+					"Managing databases",
+					"Writing documentation",
+				],
+				answer: "Connecting systems through their APIs",
+			},
+			{
+				question: "What is CI/CD?",
+				options: [
+					"Continuous Integration and Continuous Deployment",
+					"Code Implementation and Code Design",
+					"Continuous Improvement and Continuous Delivery",
+					"Compiled Integration and Compiled Deployment",
+				],
+				answer: "Continuous Integration and Continuous Deployment",
+			},
+			{
+				question: "What is a POC?",
+				options: [
+					"Proof of Concept",
+					"Point of Contact",
+					"Process of Compilation",
+					"Product Optimization Cycle",
+				],
+				answer: "Proof of Concept",
+			},
+			{
+				question: "Terraform is used for...",
+				options: [
+					"Infrastructure provisioning",
+					"Container orchestration",
+					"Frontend development",
+					"Data analysis",
+				],
+				answer: "Infrastructure provisioning",
+			},
 		],
 	};
 
@@ -607,7 +1165,9 @@ export function applyResumeScores(
 	result: Record<string, unknown>,
 	careerGoal: string,
 ): ResumeAnalysisResult {
-	const skills = resolveAliases(Array.isArray(result?.skills) ? result.skills : []);
+	const skills = resolveAliases(
+		Array.isArray(result?.skills) ? result.skills : [],
+	);
 	const softSkills = Array.isArray(result?.softSkills) ? result.softSkills : [];
 	const experience = Array.isArray(result?.experience) ? result.experience : [];
 	const education = Array.isArray(result?.education) ? result.education : [];
@@ -621,9 +1181,7 @@ export function applyResumeScores(
 
 	const profile = getCareerProfile(careerGoal);
 	const matchedCore = profile.coreSkills.filter((s) =>
-		skills.some((us: string) =>
-			us.toLowerCase() === s.toLowerCase(),
-		),
+		skills.some((us: string) => us.toLowerCase() === s.toLowerCase()),
 	);
 
 	const rawScore =
@@ -665,13 +1223,24 @@ export function applySkillGapScores(
 	experience?: { role: string; company: string; duration: string }[],
 	_education?: { degree: string; school: string; year: string }[],
 	experienceLevel?: ExperienceLevel,
-	customWeights?: { weightedSkills: WeightedSkill[]; coreSkills: string[]; tools: string[] },
+	customWeights?: {
+		weightedSkills: WeightedSkill[];
+		coreSkills: string[];
+		tools: string[];
+	},
 	repoSkills?: Set<string>,
 	seniorityPostingSkills?: Set<string>,
 ): SkillGapAnalysisResult {
 	const level = experienceLevel || inferExperienceLevel(experience);
 	const { profile, strong, improving, weak, skillCategories, gapPriority } =
-		categorizeSkillsForGoal(skills, careerGoal, level, customWeights, repoSkills, seniorityPostingSkills);
+		categorizeSkillsForGoal(
+			skills,
+			careerGoal,
+			level,
+			customWeights,
+			repoSkills,
+			seniorityPostingSkills,
+		);
 
 	const finalStrong = Array.isArray(result?.strong)
 		? (result.strong as string[])
@@ -716,9 +1285,10 @@ export function applySkillGapScores(
 			const inMarket = seniorityPostingSkills?.has(skill);
 			return {
 				skill,
-				importance: (inMarket
-					? i < 2 ? "high" : "medium"
-					: "low") as "high" | "medium" | "low",
+				importance: (inMarket ? (i < 2 ? "high" : "medium") : "low") as
+					| "high"
+					| "medium"
+					| "low",
 				reason: inMarket
 					? `Appears in job postings — market-critical for ${careerGoal}`
 					: `Nice-to-have for ${careerGoal} — adds hiring advantage`,
@@ -880,7 +1450,16 @@ export async function analyzeSkillGap(
 		prompt,
 	)) as unknown as SkillGapAnalysisResult;
 	if (!result) {
-		result = buildMockSkillGap(skills, careerGoal, experience, education, level, customWeights, repoSkills, seniorityPostingSkills);
+		result = buildMockSkillGap(
+			skills,
+			careerGoal,
+			experience,
+			education,
+			level,
+			customWeights,
+			repoSkills,
+			seniorityPostingSkills,
+		);
 	} else {
 		result = applySkillGapScores(
 			result as unknown as Record<string, unknown>,
@@ -1042,126 +1621,487 @@ function getRoadmapsByGoal(): Record<
 > {
 	return {
 		"AI / Machine Learning Engineer": [
-			{ step: "Math & Python Foundations", details: "Linear algebra, statistics, NumPy, Pandas", duration: "3 weeks" },
-			{ step: "ML Fundamentals", details: "Scikit-learn, supervised/unsupervised learning, model evaluation", duration: "4 weeks" },
-			{ step: "Deep Learning", details: "Neural networks with PyTorch or TensorFlow", duration: "4 weeks" },
-			{ step: "MLOps & Deployment", details: "Model serving, MLflow, cloud deployment", duration: "3 weeks" },
-			{ step: "Capstone Project", details: "End-to-end ML project with dataset, training, and deployment", duration: "4 weeks" },
+			{
+				step: "Math & Python Foundations",
+				details: "Linear algebra, statistics, NumPy, Pandas",
+				duration: "3 weeks",
+			},
+			{
+				step: "ML Fundamentals",
+				details:
+					"Scikit-learn, supervised/unsupervised learning, model evaluation",
+				duration: "4 weeks",
+			},
+			{
+				step: "Deep Learning",
+				details: "Neural networks with PyTorch or TensorFlow",
+				duration: "4 weeks",
+			},
+			{
+				step: "MLOps & Deployment",
+				details: "Model serving, MLflow, cloud deployment",
+				duration: "3 weeks",
+			},
+			{
+				step: "Capstone Project",
+				details: "End-to-end ML project with dataset, training, and deployment",
+				duration: "4 weeks",
+			},
 		],
 		"Cloud Engineer (AWS / Azure / GCP)": [
-			{ step: "Cloud Fundamentals", details: "IAM, VPC, compute, storage across AWS/Azure/GCP", duration: "3 weeks" },
-			{ step: "Infrastructure as Code", details: "Terraform and CloudFormation templates", duration: "3 weeks" },
-			{ step: "Networking & Security", details: "Load balancers, DNS, security groups, encryption", duration: "3 weeks" },
-			{ step: "Containers on Cloud", details: "ECS/EKS, Azure AKS, GKE basics", duration: "3 weeks" },
-			{ step: "Certification Prep", details: "Practice exams and hands-on labs", duration: "4 weeks" },
+			{
+				step: "Cloud Fundamentals",
+				details: "IAM, VPC, compute, storage across AWS/Azure/GCP",
+				duration: "3 weeks",
+			},
+			{
+				step: "Infrastructure as Code",
+				details: "Terraform and CloudFormation templates",
+				duration: "3 weeks",
+			},
+			{
+				step: "Networking & Security",
+				details: "Load balancers, DNS, security groups, encryption",
+				duration: "3 weeks",
+			},
+			{
+				step: "Containers on Cloud",
+				details: "ECS/EKS, Azure AKS, GKE basics",
+				duration: "3 weeks",
+			},
+			{
+				step: "Certification Prep",
+				details: "Practice exams and hands-on labs",
+				duration: "4 weeks",
+			},
 		],
 		"Cybersecurity Specialist": [
-			{ step: "Security Foundations", details: "Networking, OS hardening, security policies", duration: "3 weeks" },
-			{ step: "Threat & Vulnerability", details: "Nmap, vulnerability scanning, risk assessment", duration: "3 weeks" },
-			{ step: "Defensive Operations", details: "SIEM, log analysis, incident response playbooks", duration: "4 weeks" },
-			{ step: "Offensive Basics (Ethical)", details: "Burp Suite, penetration testing methodology", duration: "3 weeks" },
-			{ step: "Certification & Labs", details: "Security+ study plan with TryHackMe/HTB labs", duration: "5 weeks" },
+			{
+				step: "Security Foundations",
+				details: "Networking, OS hardening, security policies",
+				duration: "3 weeks",
+			},
+			{
+				step: "Threat & Vulnerability",
+				details: "Nmap, vulnerability scanning, risk assessment",
+				duration: "3 weeks",
+			},
+			{
+				step: "Defensive Operations",
+				details: "SIEM, log analysis, incident response playbooks",
+				duration: "4 weeks",
+			},
+			{
+				step: "Offensive Basics (Ethical)",
+				details: "Burp Suite, penetration testing methodology",
+				duration: "3 weeks",
+			},
+			{
+				step: "Certification & Labs",
+				details: "Security+ study plan with TryHackMe/HTB labs",
+				duration: "5 weeks",
+			},
 		],
 		"Backend Engineer": [
-			{ step: "API & Database Design", details: "RESTful APIs, SQL, database normalization, indexing", duration: "3 weeks" },
-			{ step: "System Design Basics", details: "Load balancing, caching, microservices, messaging queues", duration: "4 weeks" },
-			{ step: "Authentication & Security", details: "JWT, OAuth, RBAC, encryption, secure API patterns", duration: "2 weeks" },
-			{ step: "Performance & Testing", details: "Load testing, query optimization, profiling, CI/CD", duration: "3 weeks" },
-			{ step: "Production Deployment", details: "Docker, Kubernetes, cloud deployment, monitoring", duration: "3 weeks" },
+			{
+				step: "API & Database Design",
+				details: "RESTful APIs, SQL, database normalization, indexing",
+				duration: "3 weeks",
+			},
+			{
+				step: "System Design Basics",
+				details: "Load balancing, caching, microservices, messaging queues",
+				duration: "4 weeks",
+			},
+			{
+				step: "Authentication & Security",
+				details: "JWT, OAuth, RBAC, encryption, secure API patterns",
+				duration: "2 weeks",
+			},
+			{
+				step: "Performance & Testing",
+				details: "Load testing, query optimization, profiling, CI/CD",
+				duration: "3 weeks",
+			},
+			{
+				step: "Production Deployment",
+				details: "Docker, Kubernetes, cloud deployment, monitoring",
+				duration: "3 weeks",
+			},
 		],
 		"Frontend Engineer": [
-			{ step: "HTML/CSS Foundations", details: "Semantic HTML, CSS layout, Flexbox, Grid, responsive design", duration: "2 weeks" },
-			{ step: "JavaScript & TypeScript", details: "ES6+, closures, async/await, TypeScript types and generics", duration: "3 weeks" },
-			{ step: "React Deep Dive", details: "Hooks, context, state management, performance optimization", duration: "4 weeks" },
-			{ step: "Modern Tooling", details: "Next.js, Tailwind CSS, Vite, testing with Jest/RTL", duration: "3 weeks" },
-			{ step: "Accessibility & Performance", details: "Core Web Vitals, ARIA, lazy loading, code splitting", duration: "2 weeks" },
+			{
+				step: "HTML/CSS Foundations",
+				details: "Semantic HTML, CSS layout, Flexbox, Grid, responsive design",
+				duration: "2 weeks",
+			},
+			{
+				step: "JavaScript & TypeScript",
+				details: "ES6+, closures, async/await, TypeScript types and generics",
+				duration: "3 weeks",
+			},
+			{
+				step: "React Deep Dive",
+				details: "Hooks, context, state management, performance optimization",
+				duration: "4 weeks",
+			},
+			{
+				step: "Modern Tooling",
+				details: "Next.js, Tailwind CSS, Vite, testing with Jest/RTL",
+				duration: "3 weeks",
+			},
+			{
+				step: "Accessibility & Performance",
+				details: "Core Web Vitals, ARIA, lazy loading, code splitting",
+				duration: "2 weeks",
+			},
 		],
 		"Full-Stack Developer": [
-			{ step: "Frontend Foundations", details: "React, TypeScript, CSS, responsive patterns", duration: "3 weeks" },
-			{ step: "Backend & API Development", details: "Node.js, Express, REST APIs, authentication", duration: "3 weeks" },
-			{ step: "Database & Storage", details: "PostgreSQL, MongoDB, Redis, Prisma ORM", duration: "3 weeks" },
-			{ step: "DevOps & Deployment", details: "Docker, CI/CD, cloud deployment (Vercel/AWS)", duration: "3 weeks" },
-			{ step: "Full-Stack Capstone", details: "Build a complete SaaS app with auth, payments, and database", duration: "4 weeks" },
+			{
+				step: "Frontend Foundations",
+				details: "React, TypeScript, CSS, responsive patterns",
+				duration: "3 weeks",
+			},
+			{
+				step: "Backend & API Development",
+				details: "Node.js, Express, REST APIs, authentication",
+				duration: "3 weeks",
+			},
+			{
+				step: "Database & Storage",
+				details: "PostgreSQL, MongoDB, Redis, Prisma ORM",
+				duration: "3 weeks",
+			},
+			{
+				step: "DevOps & Deployment",
+				details: "Docker, CI/CD, cloud deployment (Vercel/AWS)",
+				duration: "3 weeks",
+			},
+			{
+				step: "Full-Stack Capstone",
+				details: "Build a complete SaaS app with auth, payments, and database",
+				duration: "4 weeks",
+			},
 		],
 		"DevOps / Platform Engineer": [
-			{ step: "Linux & Scripting", details: "Command line, bash scripting, process management", duration: "2 weeks" },
-			{ step: "Containerization", details: "Docker, Docker Compose, container networking", duration: "2 weeks" },
-			{ step: "Container Orchestration", details: "Kubernetes: pods, services, deployments, Helm", duration: "4 weeks" },
-			{ step: "CI/CD & Automation", details: "GitHub Actions, Terraform, Ansible, infrastructure as code", duration: "3 weeks" },
-			{ step: "Monitoring & Reliability", details: "Prometheus, Grafana, SLOs, incident response", duration: "3 weeks" },
+			{
+				step: "Linux & Scripting",
+				details: "Command line, bash scripting, process management",
+				duration: "2 weeks",
+			},
+			{
+				step: "Containerization",
+				details: "Docker, Docker Compose, container networking",
+				duration: "2 weeks",
+			},
+			{
+				step: "Container Orchestration",
+				details: "Kubernetes: pods, services, deployments, Helm",
+				duration: "4 weeks",
+			},
+			{
+				step: "CI/CD & Automation",
+				details: "GitHub Actions, Terraform, Ansible, infrastructure as code",
+				duration: "3 weeks",
+			},
+			{
+				step: "Monitoring & Reliability",
+				details: "Prometheus, Grafana, SLOs, incident response",
+				duration: "3 weeks",
+			},
 		],
 		"Software Engineer (Product-Based Companies)": [
-			{ step: "Data Structures & Algorithms", details: "Arrays, trees, graphs, DP, hash tables — solve 100+ problems", duration: "6 weeks" },
-			{ step: "System Design", details: "Scalability, distributed systems, design interviews prep", duration: "4 weeks" },
-			{ step: "Object-Oriented Design", details: "SOLID, design patterns, clean architecture", duration: "3 weeks" },
-			{ step: "Testing & Code Quality", details: "Unit tests, integration tests, code reviews, CI", duration: "2 weeks" },
-			{ step: "Interview Preparation", details: "Mock interviews, behavioral prep, portfolio projects", duration: "4 weeks" },
+			{
+				step: "Data Structures & Algorithms",
+				details: "Arrays, trees, graphs, DP, hash tables — solve 100+ problems",
+				duration: "6 weeks",
+			},
+			{
+				step: "System Design",
+				details: "Scalability, distributed systems, design interviews prep",
+				duration: "4 weeks",
+			},
+			{
+				step: "Object-Oriented Design",
+				details: "SOLID, design patterns, clean architecture",
+				duration: "3 weeks",
+			},
+			{
+				step: "Testing & Code Quality",
+				details: "Unit tests, integration tests, code reviews, CI",
+				duration: "2 weeks",
+			},
+			{
+				step: "Interview Preparation",
+				details: "Mock interviews, behavioral prep, portfolio projects",
+				duration: "4 weeks",
+			},
 		],
 		"Data Analyst": [
-			{ step: "SQL & Statistics", details: "Advanced SQL, window functions, statistical foundations", duration: "3 weeks" },
-			{ step: "Data Visualization", details: "Tableau, Power BI, matplotlib, storytelling with data", duration: "3 weeks" },
-			{ step: "Python for Analytics", details: "Pandas, NumPy, data cleaning, exploratory analysis", duration: "3 weeks" },
-			{ step: "Experimental Design", details: "A/B testing, hypothesis testing, causal inference", duration: "3 weeks" },
-			{ step: "Capstone: Business Analytics", details: "End-to-end analysis with real dataset, dashboard, and recommendations", duration: "3 weeks" },
+			{
+				step: "SQL & Statistics",
+				details: "Advanced SQL, window functions, statistical foundations",
+				duration: "3 weeks",
+			},
+			{
+				step: "Data Visualization",
+				details: "Tableau, Power BI, matplotlib, storytelling with data",
+				duration: "3 weeks",
+			},
+			{
+				step: "Python for Analytics",
+				details: "Pandas, NumPy, data cleaning, exploratory analysis",
+				duration: "3 weeks",
+			},
+			{
+				step: "Experimental Design",
+				details: "A/B testing, hypothesis testing, causal inference",
+				duration: "3 weeks",
+			},
+			{
+				step: "Capstone: Business Analytics",
+				details:
+					"End-to-end analysis with real dataset, dashboard, and recommendations",
+				duration: "3 weeks",
+			},
 		],
 		"Data Engineer": [
-			{ step: "SQL & Data Modeling", details: "Advanced SQL, dimensional modeling, star/snowflake schemas", duration: "3 weeks" },
-			{ step: "Python & ETL", details: "Python data pipelines, ETL/ELT patterns, Airflow basics", duration: "3 weeks" },
-			{ step: "Big Data Tools", details: "Apache Spark, Kafka, data warehousing with Snowflake/BigQuery", duration: "4 weeks" },
-			{ step: "Modern Data Stack", details: "dbt, Airflow, Docker, data quality testing", duration: "3 weeks" },
-			{ step: "Production Data Pipelines", details: "Build a real-time data pipeline with monitoring and alerting", duration: "4 weeks" },
+			{
+				step: "SQL & Data Modeling",
+				details: "Advanced SQL, dimensional modeling, star/snowflake schemas",
+				duration: "3 weeks",
+			},
+			{
+				step: "Python & ETL",
+				details: "Python data pipelines, ETL/ELT patterns, Airflow basics",
+				duration: "3 weeks",
+			},
+			{
+				step: "Big Data Tools",
+				details:
+					"Apache Spark, Kafka, data warehousing with Snowflake/BigQuery",
+				duration: "4 weeks",
+			},
+			{
+				step: "Modern Data Stack",
+				details: "dbt, Airflow, Docker, data quality testing",
+				duration: "3 weeks",
+			},
+			{
+				step: "Production Data Pipelines",
+				details: "Build a real-time data pipeline with monitoring and alerting",
+				duration: "4 weeks",
+			},
 		],
 		"Mobile Developer": [
-			{ step: "Mobile Platform Basics", details: "iOS with Swift/SwiftUI or Android with Kotlin/Jetpack Compose", duration: "4 weeks" },
-			{ step: "Mobile Architecture", details: "MVVM, Clean Architecture, navigation patterns", duration: "3 weeks" },
-			{ step: "Networking & Storage", details: "REST APIs, local storage, Firebase, Core Data/Room", duration: "3 weeks" },
-			{ step: "UI/UX & Performance", details: "Material Design/HIG, animations, memory management", duration: "2 weeks" },
-			{ step: "App Store & Deployment", details: "App Store Connect/Google Play, CI/CD, monitoring", duration: "2 weeks" },
+			{
+				step: "Mobile Platform Basics",
+				details:
+					"iOS with Swift/SwiftUI or Android with Kotlin/Jetpack Compose",
+				duration: "4 weeks",
+			},
+			{
+				step: "Mobile Architecture",
+				details: "MVVM, Clean Architecture, navigation patterns",
+				duration: "3 weeks",
+			},
+			{
+				step: "Networking & Storage",
+				details: "REST APIs, local storage, Firebase, Core Data/Room",
+				duration: "3 weeks",
+			},
+			{
+				step: "UI/UX & Performance",
+				details: "Material Design/HIG, animations, memory management",
+				duration: "2 weeks",
+			},
+			{
+				step: "App Store & Deployment",
+				details: "App Store Connect/Google Play, CI/CD, monitoring",
+				duration: "2 weeks",
+			},
 		],
 		"Data Scientist": [
-			{ step: "Statistics & Probability", details: "Bayesian stats, hypothesis testing, regression analysis", duration: "3 weeks" },
-			{ step: "Machine Learning", details: "Supervised/unsupervised learning, feature engineering, model selection", duration: "4 weeks" },
-			{ step: "Experimental Design", details: "A/B testing, confounding variables, power analysis, causal inference", duration: "3 weeks" },
-			{ step: "Data Wrangling & Visualization", details: "Pandas, matplotlib, seaborn, communicating insights", duration: "3 weeks" },
-			{ step: "Capstone: Data Science Project", details: "End-to-end ML project with real data, experimentation, and presentation", duration: "4 weeks" },
+			{
+				step: "Statistics & Probability",
+				details: "Bayesian stats, hypothesis testing, regression analysis",
+				duration: "3 weeks",
+			},
+			{
+				step: "Machine Learning",
+				details:
+					"Supervised/unsupervised learning, feature engineering, model selection",
+				duration: "4 weeks",
+			},
+			{
+				step: "Experimental Design",
+				details:
+					"A/B testing, confounding variables, power analysis, causal inference",
+				duration: "3 weeks",
+			},
+			{
+				step: "Data Wrangling & Visualization",
+				details: "Pandas, matplotlib, seaborn, communicating insights",
+				duration: "3 weeks",
+			},
+			{
+				step: "Capstone: Data Science Project",
+				details:
+					"End-to-end ML project with real data, experimentation, and presentation",
+				duration: "4 weeks",
+			},
 		],
 		"Site Reliability Engineer (SRE)": [
-			{ step: "Linux & Systems", details: "Linux internals, system calls, process management, networking stack", duration: "3 weeks" },
-			{ step: "Monitoring & Observability", details: "Prometheus, Grafana, distributed tracing, logging", duration: "3 weeks" },
-			{ step: "Incident Response & Reliability", details: "SLOs, error budgets, incident management, postmortems", duration: "3 weeks" },
-			{ step: "Automation & Scripting", details: "Go/Python scripting, infrastructure automation, chaos engineering", duration: "4 weeks" },
-			{ step: "Distributed Systems", details: "Consensus algorithms, distributed storage, CDN, load balancing", duration: "4 weeks" },
+			{
+				step: "Linux & Systems",
+				details:
+					"Linux internals, system calls, process management, networking stack",
+				duration: "3 weeks",
+			},
+			{
+				step: "Monitoring & Observability",
+				details: "Prometheus, Grafana, distributed tracing, logging",
+				duration: "3 weeks",
+			},
+			{
+				step: "Incident Response & Reliability",
+				details: "SLOs, error budgets, incident management, postmortems",
+				duration: "3 weeks",
+			},
+			{
+				step: "Automation & Scripting",
+				details:
+					"Go/Python scripting, infrastructure automation, chaos engineering",
+				duration: "4 weeks",
+			},
+			{
+				step: "Distributed Systems",
+				details:
+					"Consensus algorithms, distributed storage, CDN, load balancing",
+				duration: "4 weeks",
+			},
 		],
 		"UI/UX Designer": [
-			{ step: "Design Fundamentals", details: "Color theory, typography, layout, visual hierarchy", duration: "2 weeks" },
-			{ step: "User Research", details: "User interviews, surveys, usability testing, persona creation", duration: "3 weeks" },
-			{ step: "Wireframing & Prototyping", details: "Figma, Sketch, low/high fidelity wireframes, interactive prototypes", duration: "3 weeks" },
-			{ step: "Design Systems", details: "Component libraries, design tokens, accessibility, Storybook", duration: "3 weeks" },
-			{ step: "Portfolio & Case Studies", details: "Build 3 case studies with research, iterations, and final designs", duration: "4 weeks" },
+			{
+				step: "Design Fundamentals",
+				details: "Color theory, typography, layout, visual hierarchy",
+				duration: "2 weeks",
+			},
+			{
+				step: "User Research",
+				details:
+					"User interviews, surveys, usability testing, persona creation",
+				duration: "3 weeks",
+			},
+			{
+				step: "Wireframing & Prototyping",
+				details:
+					"Figma, Sketch, low/high fidelity wireframes, interactive prototypes",
+				duration: "3 weeks",
+			},
+			{
+				step: "Design Systems",
+				details: "Component libraries, design tokens, accessibility, Storybook",
+				duration: "3 weeks",
+			},
+			{
+				step: "Portfolio & Case Studies",
+				details:
+					"Build 3 case studies with research, iterations, and final designs",
+				duration: "4 weeks",
+			},
 		],
 		"Product Manager": [
-			{ step: "Product Thinking", details: "Product strategy, user stories, OKRs, prioritization frameworks", duration: "3 weeks" },
-			{ step: "Analytics & Experimentation", details: "Metrics, A/B testing, Amplitude/Mixpanel, data-driven decisions", duration: "3 weeks" },
-			{ step: "Stakeholder Management", details: "Cross-functional collaboration, executive communication, roadmapping", duration: "2 weeks" },
-			{ step: "Market & User Research", details: "Competitive analysis, user interviews, market sizing, TAM", duration: "3 weeks" },
-			{ step: "Build a Product Portfolio", details: "Define, launch, and iterate a product concept with PRD and metrics", duration: "4 weeks" },
+			{
+				step: "Product Thinking",
+				details:
+					"Product strategy, user stories, OKRs, prioritization frameworks",
+				duration: "3 weeks",
+			},
+			{
+				step: "Analytics & Experimentation",
+				details:
+					"Metrics, A/B testing, Amplitude/Mixpanel, data-driven decisions",
+				duration: "3 weeks",
+			},
+			{
+				step: "Stakeholder Management",
+				details:
+					"Cross-functional collaboration, executive communication, roadmapping",
+				duration: "2 weeks",
+			},
+			{
+				step: "Market & User Research",
+				details: "Competitive analysis, user interviews, market sizing, TAM",
+				duration: "3 weeks",
+			},
+			{
+				step: "Build a Product Portfolio",
+				details:
+					"Define, launch, and iterate a product concept with PRD and metrics",
+				duration: "4 weeks",
+			},
 		],
 		"Forward Deployed Engineer": [
-			{ step: "Full-Stack Foundations", details: "TypeScript, React, Node.js, databases, REST APIs", duration: "3 weeks" },
-			{ step: "API Integration & Deployment", details: "Third-party API integration, CI/CD, cloud deployment", duration: "3 weeks" },
-			{ step: "Client & Consulting Skills", details: "Requirements gathering, technical demos, communication", duration: "2 weeks" },
-			{ step: "Rapid Prototyping", details: "Build MVPs quickly, iterate based on feedback, POC delivery", duration: "3 weeks" },
-			{ step: "Production & Scale", details: "Monitoring, alerting, Terraform, production troubleshooting", duration: "3 weeks" },
+			{
+				step: "Full-Stack Foundations",
+				details: "TypeScript, React, Node.js, databases, REST APIs",
+				duration: "3 weeks",
+			},
+			{
+				step: "API Integration & Deployment",
+				details: "Third-party API integration, CI/CD, cloud deployment",
+				duration: "3 weeks",
+			},
+			{
+				step: "Client & Consulting Skills",
+				details: "Requirements gathering, technical demos, communication",
+				duration: "2 weeks",
+			},
+			{
+				step: "Rapid Prototyping",
+				details: "Build MVPs quickly, iterate based on feedback, POC delivery",
+				duration: "3 weeks",
+			},
+			{
+				step: "Production & Scale",
+				details: "Monitoring, alerting, Terraform, production troubleshooting",
+				duration: "3 weeks",
+			},
 		],
 	};
 }
 
-function buildDefaultRoadmap(profile: CareerGoalProfile, careerGoal: string): { step: string; details: string; duration: string }[] {
+function buildDefaultRoadmap(
+	profile: CareerGoalProfile,
+	careerGoal: string,
+): { step: string; details: string; duration: string }[] {
 	return [
-		{ step: "Strengthen Core Skills", details: `Master ${profile.coreSkills.slice(0, 2).join(" and ")}`, duration: "2-3 weeks" },
-		{ step: "Learn Essential Tools", details: `Hands-on with ${profile.tools.slice(0, 3).join(", ")}`, duration: "3 weeks" },
-		{ step: "Build Portfolio Project", details: `Create a project demonstrating ${careerGoal} skills`, duration: "3-4 weeks" },
-		{ step: "Practice & Interview Prep", details: "Mock interviews, coding challenges, system design basics", duration: "3 weeks" },
-		{ step: "Apply & Iterate", details: "Target internships/junior roles, refine resume based on feedback", duration: "Ongoing" },
+		{
+			step: "Strengthen Core Skills",
+			details: `Master ${profile.coreSkills.slice(0, 2).join(" and ")}`,
+			duration: "2-3 weeks",
+		},
+		{
+			step: "Learn Essential Tools",
+			details: `Hands-on with ${profile.tools.slice(0, 3).join(", ")}`,
+			duration: "3 weeks",
+		},
+		{
+			step: "Build Portfolio Project",
+			details: `Create a project demonstrating ${careerGoal} skills`,
+			duration: "3-4 weeks",
+		},
+		{
+			step: "Practice & Interview Prep",
+			details: "Mock interviews, coding challenges, system design basics",
+			duration: "3 weeks",
+		},
+		{
+			step: "Apply & Iterate",
+			details:
+				"Target internships/junior roles, refine resume based on feedback",
+			duration: "Ongoing",
+		},
 	];
 }

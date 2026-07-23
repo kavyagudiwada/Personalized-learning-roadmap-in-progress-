@@ -18,4 +18,3 @@ export interface SendMessageResponse {
 	message: ChatMessageResponse;
 	reply: ChatMessageResponse;
 }
-

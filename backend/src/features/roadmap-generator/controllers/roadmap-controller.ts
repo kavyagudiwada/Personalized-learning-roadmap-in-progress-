@@ -1,8 +1,17 @@
 import type { Response } from "express";
 import type { AuthRequest } from "@/middleware/authenticate";
 import { AppError } from "@/utils/errors";
-import { generateRoadmapSchema, updatePhaseSchema } from "../schemas/roadmap-schema";
-import { generateRoadmap, getUserRoadmaps, getRoadmapById, updatePhaseStatus, deleteRoadmap } from "../services/roadmap-service";
+import {
+	generateRoadmapSchema,
+	updatePhaseSchema,
+} from "../schemas/roadmap-schema";
+import {
+	deleteRoadmap,
+	generateRoadmap,
+	getRoadmapById,
+	getUserRoadmaps,
+	updatePhaseStatus,
+} from "../services/roadmap-service";
 
 function ensureUser(req: AuthRequest): NonNullable<AuthRequest["user"]> {
 	if (!req.user) throw new AppError("Unauthorized", 401);
@@ -13,7 +22,11 @@ export async function createRoadmapController(req: AuthRequest, res: Response) {
 	const user = ensureUser(req);
 	const parsed = generateRoadmapSchema.safeParse(req.body);
 	if (!parsed.success) {
-		throw new AppError("Invalid request", 400, parsed.error.flatten().fieldErrors);
+		throw new AppError(
+			"Invalid request",
+			400,
+			parsed.error.flatten().fieldErrors,
+		);
 	}
 	const { goal, source } = parsed.data;
 	const roadmap = await generateRoadmap(user.id, goal, source);
@@ -40,7 +53,11 @@ export async function updatePhaseController(req: AuthRequest, res: Response) {
 	if (!roadmapId) throw new AppError("roadmapId parameter is required", 400);
 	const parsed = updatePhaseSchema.safeParse(req.body);
 	if (!parsed.success) {
-		throw new AppError("Invalid request", 400, parsed.error.flatten().fieldErrors);
+		throw new AppError(
+			"Invalid request",
+			400,
+			parsed.error.flatten().fieldErrors,
+		);
 	}
 	const { phaseId, status } = parsed.data;
 	const roadmap = await updatePhaseStatus(user.id, roadmapId, phaseId, status);

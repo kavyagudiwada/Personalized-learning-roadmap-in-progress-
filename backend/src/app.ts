@@ -1,21 +1,21 @@
-import path from "path";
 import cors from "cors";
 import express from "express";
+import path from "path";
 import { auth } from "@/config/auth";
 import { assessmentRoutes } from "@/features/assessments";
+import { chatbotRoutes } from "@/features/chatbot";
+import { codingRoutes } from "@/features/coding-challenge";
+import { refreshMarketProfilesController } from "@/features/recommendations/controllers/admin-market-controller";
 import adminResourceRoutes from "@/features/recommendations/routes/admin-resource-routes";
 import recommendationRoutes from "@/features/recommendations/routes/recommendation-routes";
+import { roadmapRoutes } from "@/features/roadmap-generator";
 import { skillGapRoutes } from "@/features/skill-gap-analysis";
 import { userRoutes } from "@/features/users";
 import githubRoutes from "@/features/users/routes/github-routes";
 import resumeRoutes from "@/features/users/routes/resume-routes";
-import { chatbotRoutes } from "@/features/chatbot";
-import { roadmapRoutes } from "@/features/roadmap-generator";
-import { codingRoutes } from "@/features/coding-challenge";
-import { refreshMarketProfilesController } from "@/features/recommendations/controllers/admin-market-controller";
 import { authenticateToken } from "@/middleware/authenticate";
-import { requireRole } from "@/middleware/rbac";
 import { errorHandler } from "@/middleware/error-handler";
+import { requireRole } from "@/middleware/rbac";
 
 const app = express();
 
@@ -34,7 +34,12 @@ app.use(
 	cors({
 		origin: (origin, callback) => {
 			if (!origin) return callback(null, true);
-			if (allowedOrigins.some((o) => (typeof o === "string" ? o === origin : o.test(origin)))) return callback(null, true);
+			if (
+				allowedOrigins.some((o) =>
+					typeof o === "string" ? o === origin : o.test(origin),
+				)
+			)
+				return callback(null, true);
 			callback(new Error(`CORS blocked: ${origin}`));
 		},
 		credentials: true,
@@ -45,7 +50,10 @@ app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth/callback", (req, _res, next) => {
-	console.log(`[Auth Callback Req] ${req.method} ${req.url} host=${req.headers.host} cookies:`, req.headers.cookie);
+	console.log(
+		`[Auth Callback Req] ${req.method} ${req.url} host=${req.headers.host} cookies:`,
+		req.headers.cookie,
+	);
 	next();
 });
 
@@ -60,8 +68,12 @@ app.all("/api/auth/*", async (req, res) => {
 	const host = req.headers.host || "localhost";
 	const url = new URL(req.url || "", `http://${host}`);
 	const skipHeaders = new Set([
-		"host", "connection", "content-length", "keep-alive",
-		"transfer-encoding", "accept-encoding",
+		"host",
+		"connection",
+		"content-length",
+		"keep-alive",
+		"transfer-encoding",
+		"accept-encoding",
 	]);
 	const headers = new Headers();
 	for (const key of Object.keys(req.headers)) {
@@ -73,7 +85,10 @@ app.all("/api/auth/*", async (req, res) => {
 	}
 	const isGetOrHead = req.method === "GET" || req.method === "HEAD";
 	const body =
-		!isGetOrHead && req.body && typeof req.body === "object" && Object.keys(req.body).length > 0
+		!isGetOrHead &&
+		req.body &&
+		typeof req.body === "object" &&
+		Object.keys(req.body).length > 0
 			? JSON.stringify(req.body)
 			: undefined;
 	if (body) {
@@ -86,13 +101,20 @@ app.all("/api/auth/*", async (req, res) => {
 	});
 	try {
 		const response = await auth.handler(request);
-		const isSecure = req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
+		const isSecure =
+			req.headers["x-forwarded-proto"] === "https" || req.protocol === "https";
 		const allSetCookies = response.headers.getSetCookie();
 		if (allSetCookies.length > 0) {
-			console.log(`[Auth Proxy OUT original] ${req.method} ${req.path} (isSecure=${isSecure}) —`, allSetCookies);
+			console.log(
+				`[Auth Proxy OUT original] ${req.method} ${req.path} (isSecure=${isSecure}) —`,
+				allSetCookies,
+			);
 		}
 		for (const cookie of allSetCookies) {
-			const modified = cookie.replace(/;\s*SameSite=Lax/gi, isSecure ? "; SameSite=None; Secure" : "; SameSite=None");
+			const modified = cookie.replace(
+				/;\s*SameSite=Lax/gi,
+				isSecure ? "; SameSite=None; Secure" : "; SameSite=None",
+			);
 			res.append("set-cookie", modified);
 		}
 		const text = await response.text();
@@ -105,12 +127,16 @@ app.all("/api/auth/*", async (req, res) => {
 					res.end();
 					return;
 				}
-			} catch { /* not JSON or unexpected shape */ }
+			} catch {
+				/* not JSON or unexpected shape */
+			}
 		}
 		if (!text) {
 			const location = response.headers.get("location");
-			const sessionCookie = allSetCookies.find((c) =>
-				/^__Secure-better-auth\.session_token=/i.test(c) || /^better-auth\.session_token=/i.test(c)
+			const sessionCookie = allSetCookies.find(
+				(c) =>
+					/^__Secure-better-auth\.session_token=/i.test(c) ||
+					/^better-auth\.session_token=/i.test(c),
 			);
 			if (location && sessionCookie) {
 				const raw = sessionCookie.split(";")[0].split("=").slice(1).join("=");
@@ -166,4 +192,3 @@ app.use("/api/admin/market", adminMarketRouter);
 app.use(errorHandler);
 
 export default app;
-

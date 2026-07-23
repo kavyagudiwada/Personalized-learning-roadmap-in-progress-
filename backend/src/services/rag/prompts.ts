@@ -67,4 +67,3 @@ Respond strictly with a JSON object:
   "projectIdeas": ["Idea 1", ...]
 }`;
 }
-

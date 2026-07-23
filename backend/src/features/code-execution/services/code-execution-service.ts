@@ -1,7 +1,7 @@
 import { execFile } from "child_process";
-import path from "path";
 import fs from "fs";
 import os from "os";
+import path from "path";
 
 interface TestCase {
 	input: string;
@@ -18,7 +18,11 @@ interface RunResult {
 	error?: string;
 }
 
-function getRunner(language: string): { cmd: string; ext: string; wrap: (code: string, fnName: string, testCase: TestCase) => string } {
+function getRunner(language: string): {
+	cmd: string;
+	ext: string;
+	wrap: (code: string, fnName: string, testCase: TestCase) => string;
+} {
 	switch (language) {
 		case "python":
 			return {
@@ -55,26 +59,39 @@ function getRunner(language: string): { cmd: string; ext: string; wrap: (code: s
 	}
 }
 
-function execCmd(cmd: string, args: string[], input?: string): Promise<{ stdout: string; stderr: string }> {
+function execCmd(
+	cmd: string,
+	args: string[],
+	input?: string,
+): Promise<{ stdout: string; stderr: string }> {
 	return new Promise((resolve, reject) => {
-		const child = execFile(cmd, args, {
-			timeout: 10_000,
-			maxBuffer: 1024 * 1024,
-			...(input ? { input } : {}),
-		}, (err, stdout, stderr) => {
-			if (err && (err as NodeJS.ErrnoException).code === "ENOENT") {
-				reject(new Error(`Runtime not found: ${cmd}. Is it installed?`));
-				return;
-			}
-			resolve({ stdout: stdout || "", stderr: stderr || "" });
-		});
+		const child = execFile(
+			cmd,
+			args,
+			{
+				timeout: 10_000,
+				maxBuffer: 1024 * 1024,
+				...(input ? { input } : {}),
+			},
+			(err, stdout, stderr) => {
+				if (err && (err as NodeJS.ErrnoException).code === "ENOENT") {
+					reject(new Error(`Runtime not found: ${cmd}. Is it installed?`));
+					return;
+				}
+				resolve({ stdout: stdout || "", stderr: stderr || "" });
+			},
+		);
 	});
 }
 
 async function runJava(code: string, workDir: string): Promise<string> {
 	const sourcePath = path.join(workDir, "Main.java");
 	fs.writeFileSync(sourcePath, code);
-	const { stderr: compileErr } = await execCmd("javac", ["Main.java"], undefined).catch((e) => {
+	const { stderr: compileErr } = await execCmd(
+		"javac",
+		["Main.java"],
+		undefined,
+	).catch((e) => {
 		throw new Error(`Compilation error: ${e.message}`);
 	});
 	if (compileErr) throw new Error(`Compilation error: ${compileErr}`);
@@ -84,14 +101,23 @@ async function runJava(code: string, workDir: string): Promise<string> {
 
 async function runCpp(code: string, workDir: string): Promise<string> {
 	const sourcePath = path.join(workDir, "main.cpp");
-	const binaryPath = path.join(workDir, "main" + (os.platform() === "win32" ? ".exe" : ""));
+	const binaryPath = path.join(
+		workDir,
+		"main" + (os.platform() === "win32" ? ".exe" : ""),
+	);
 	fs.writeFileSync(sourcePath, code);
-	const { stderr: compileErr } = await execCmd("g++", [sourcePath, "-o", binaryPath, "-std=c++17"], undefined).catch((e) => {
+	const { stderr: compileErr } = await execCmd(
+		"g++",
+		[sourcePath, "-o", binaryPath, "-std=c++17"],
+		undefined,
+	).catch((e) => {
 		throw new Error(`Compilation error: ${e.message}`);
 	});
 	if (compileErr) throw new Error(`Compilation error: ${compileErr}`);
 	const { stdout } = await execCmd(binaryPath, []);
-	try { fs.unlinkSync(binaryPath); } catch {}
+	try {
+		fs.unlinkSync(binaryPath);
+	} catch {}
 	return stdout.trim();
 }
 
@@ -123,19 +149,31 @@ export async function runCode(
 					stdout = result.stdout.trim();
 				}
 			} finally {
-				try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+				try {
+					fs.rmSync(tmpDir, { recursive: true, force: true });
+				} catch {}
 			}
 
 			const actual = stdout || "(empty)";
 			let expected = tc.expected;
 
 			if (language === "python") {
-				if (actual === "True") expected = expected === "true" ? "true" : expected;
-				if (actual === "False") expected = expected === "false" ? "false" : expected;
+				if (actual === "True")
+					expected = expected === "true" ? "true" : expected;
+				if (actual === "False")
+					expected = expected === "false" ? "false" : expected;
 			}
 
-			const passed = actual === expected || normalizeOutput(actual) === normalizeOutput(expected);
-			results.push({ passed, description: tc.description, input: tc.input, expected: tc.expected, actual });
+			const passed =
+				actual === expected ||
+				normalizeOutput(actual) === normalizeOutput(expected);
+			results.push({
+				passed,
+				description: tc.description,
+				input: tc.input,
+				expected: tc.expected,
+				actual,
+			});
 		} catch (err: unknown) {
 			results.push({
 				passed: false,
@@ -152,6 +190,8 @@ export async function runCode(
 }
 
 function normalizeOutput(s: string): string {
-	try { return JSON.stringify(JSON.parse(s)); } catch {}
+	try {
+		return JSON.stringify(JSON.parse(s));
+	} catch {}
 	return s.trim().replace(/\s+/g, " ");
 }

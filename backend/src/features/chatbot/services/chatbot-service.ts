@@ -1,6 +1,7 @@
 import axios from "axios";
 import { prisma } from "@/database";
 import { AppError } from "@/utils/errors";
+
 const { PDFParse, VerbosityLevel } = require("pdf-parse");
 
 const AI_TIMEOUT_MS = 60_000;
@@ -47,37 +48,43 @@ interface UserContext {
 }
 
 async function buildRichSystemPrompt(userId: string): Promise<string> {
-	const [userRecord, repositories, latestSkillGap, latestAssessment] = await Promise.all([
-		prisma.user.findUnique({
-			where: { id: userId },
-			select: {
-				fullName: true,
-				careerGoal: true,
-				skills: true,
-				resumeData: true,
-				githubUsername: true,
-				githubBio: true,
-				githubLocation: true,
-				githubFollowers: true,
-				githubFollowing: true,
-				githubPublicRepos: true,
-			},
-		}),
-		prisma.repository.findMany({
-			where: { userId },
-			select: { name: true, description: true, language: true, starsCount: true },
-			orderBy: { starsCount: "desc" },
-			take: 20,
-		}),
-		prisma.skillGap.findFirst({
-			where: { userId },
-			orderBy: { updatedAt: "desc" },
-		}),
-		prisma.assessment.findFirst({
-			where: { userId },
-			orderBy: { createdAt: "desc" },
-		}),
-	]);
+	const [userRecord, repositories, latestSkillGap, latestAssessment] =
+		await Promise.all([
+			prisma.user.findUnique({
+				where: { id: userId },
+				select: {
+					fullName: true,
+					careerGoal: true,
+					skills: true,
+					resumeData: true,
+					githubUsername: true,
+					githubBio: true,
+					githubLocation: true,
+					githubFollowers: true,
+					githubFollowing: true,
+					githubPublicRepos: true,
+				},
+			}),
+			prisma.repository.findMany({
+				where: { userId },
+				select: {
+					name: true,
+					description: true,
+					language: true,
+					starsCount: true,
+				},
+				orderBy: { starsCount: "desc" },
+				take: 20,
+			}),
+			prisma.skillGap.findFirst({
+				where: { userId },
+				orderBy: { updatedAt: "desc" },
+			}),
+			prisma.assessment.findFirst({
+				where: { userId },
+				orderBy: { createdAt: "desc" },
+			}),
+		]);
 
 	const ctx: UserContext = {};
 
@@ -91,8 +98,18 @@ async function buildRichSystemPrompt(userId: string): Promise<string> {
 			ctx.resumeData = {
 				skills: (rd.skills as string[]) || [],
 				softSkills: (rd.softSkills as string[]) || [],
-				experience: (rd.experience as { role: string; company: string; duration: string }[]) || [],
-				education: (rd.education as { degree: string; school: string; year: string }[]) || [],
+				experience:
+					(rd.experience as {
+						role: string;
+						company: string;
+						duration: string;
+					}[]) || [],
+				education:
+					(rd.education as {
+						degree: string;
+						school: string;
+						year: string;
+					}[]) || [],
 				summary: rd.summary as string,
 				resumeScore: rd.resumeScore as number,
 				strengths: (rd.strengths as string[]) || [],
@@ -135,7 +152,11 @@ async function buildRichSystemPrompt(userId: string): Promise<string> {
 			weak: latestSkillGap.weak,
 			improving: latestSkillGap.improving,
 			coach: latestSkillGap.coach,
-			roadmap: latestSkillGap.roadmap as { step: string; details: string; duration: string }[],
+			roadmap: latestSkillGap.roadmap as {
+				step: string;
+				details: string;
+				duration: string;
+			}[],
 		};
 	}
 
@@ -148,7 +169,10 @@ async function buildRichSystemPrompt(userId: string): Promise<string> {
 
 function formatSystemPrompt(ctx: UserContext): string {
 	const goal = ctx.careerGoal || "a tech career";
-	const skills = ctx.skills && ctx.skills.length > 0 ? ctx.skills.join(", ") : "not yet identified";
+	const skills =
+		ctx.skills && ctx.skills.length > 0
+			? ctx.skills.join(", ")
+			: "not yet identified";
 
 	let resumeSection = "";
 	if (ctx.resumeData) {
@@ -193,7 +217,10 @@ function formatSystemPrompt(ctx: UserContext): string {
 	}
 
 	let assessmentSection = "";
-	if (ctx.assessment?.latestScore !== undefined && ctx.assessment.latestScore !== null) {
+	if (
+		ctx.assessment?.latestScore !== undefined &&
+		ctx.assessment.latestScore !== null
+	) {
 		assessmentSection = `
 ## Assessment Progress
 - Latest Interview Readiness: ${ctx.assessment.latestScore}%`;
@@ -242,14 +269,26 @@ async function callChatGemini(
 
 		const response = await axios.post(
 			url,
-			{ contents, generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } },
-			{ headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, timeout: AI_TIMEOUT_MS },
+			{
+				contents,
+				generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+			},
+			{
+				headers: {
+					"Content-Type": "application/json",
+					"x-goog-api-key": apiKey,
+				},
+				timeout: AI_TIMEOUT_MS,
+			},
 		);
 
 		const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
 		return text || null;
 	} catch (err) {
-		console.error("Chat Gemini call failed:", err instanceof Error ? err.message : String(err));
+		console.error(
+			"Chat Gemini call failed:",
+			err instanceof Error ? err.message : String(err),
+		);
 		return null;
 	}
 }
@@ -275,7 +314,10 @@ async function callChatGroq(
 				max_tokens: 2048,
 			},
 			{
-				headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+				headers: {
+					Authorization: `Bearer ${apiKey}`,
+					"Content-Type": "application/json",
+				},
 				timeout: AI_TIMEOUT_MS,
 			},
 		);
@@ -283,7 +325,10 @@ async function callChatGroq(
 		const text = response.data?.choices?.[0]?.message?.content;
 		return text || null;
 	} catch (err) {
-		console.error("Chat Groq call failed:", err instanceof Error ? err.message : String(err));
+		console.error(
+			"Chat Groq call failed:",
+			err instanceof Error ? err.message : String(err),
+		);
 		return null;
 	}
 }
@@ -308,7 +353,10 @@ async function callChatGithub(
 				max_tokens: 2048,
 			},
 			{
-				headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+				headers: {
+					Authorization: `Bearer ${apiKey}`,
+					"Content-Type": "application/json",
+				},
 				timeout: AI_TIMEOUT_MS,
 			},
 		);
@@ -316,7 +364,10 @@ async function callChatGithub(
 		const text = response.data?.choices?.[0]?.message?.content;
 		return text || null;
 	} catch (err) {
-		console.error("Chat GitHub call failed:", err instanceof Error ? err.message : String(err));
+		console.error(
+			"Chat GitHub call failed:",
+			err instanceof Error ? err.message : String(err),
+		);
 		return null;
 	}
 }
@@ -334,7 +385,10 @@ async function generateReply(
 	const githubResult = await callChatGithub(messages, systemPrompt);
 	if (githubResult) return githubResult;
 
-	throw new AppError("All AI providers are currently unavailable. Please try again later.", 503);
+	throw new AppError(
+		"All AI providers are currently unavailable. Please try again later.",
+		503,
+	);
 }
 
 export async function getOrCreateSession(userId: string, title?: string) {
@@ -358,7 +412,8 @@ export async function getUserSessions(userId: string) {
 		id: s.id,
 		title: s.title,
 		messageCount: s._count.messages,
-		lastMessageAt: s.messages[0]?.createdAt.toISOString() || s.createdAt.toISOString(),
+		lastMessageAt:
+			s.messages[0]?.createdAt.toISOString() || s.createdAt.toISOString(),
 		createdAt: s.createdAt.toISOString(),
 	}));
 }
@@ -391,13 +446,19 @@ function cleanBase64(s: string): string {
 	return s.includes(";base64,") ? s.split(";base64,")[1] : s;
 }
 
-async function extractTextFromBase64(base64: string, mimeType: string): Promise<string> {
+async function extractTextFromBase64(
+	base64: string,
+	mimeType: string,
+): Promise<string> {
 	const mime = mimeType.toLowerCase();
 	const buffer = Buffer.from(cleanBase64(base64), "base64");
 
 	if (mime.includes("pdf")) {
 		try {
-			const pdf = new PDFParse({ verbosity: VerbosityLevel.ERRORS, data: buffer });
+			const pdf = new PDFParse({
+				verbosity: VerbosityLevel.ERRORS,
+				data: buffer,
+			});
 			await pdf.load();
 			const result = await pdf.getText();
 			const text = result.text || "";
@@ -438,7 +499,10 @@ export async function sendMessage(
 	let messageContent = content;
 
 	if (fileData) {
-		const extractedText = await extractTextFromBase64(fileData.base64, fileData.mimeType);
+		const extractedText = await extractTextFromBase64(
+			fileData.base64,
+			fileData.mimeType,
+		);
 		messageContent = `${content}\n\n--- Uploaded File: ${fileData.fileName} ---\n${extractedText}\n--- End of File ---`;
 	}
 
@@ -465,7 +529,8 @@ export async function sendMessage(
 	});
 
 	if (session.title === "Chat" && content.length > 0) {
-		const inferredTitle = content.slice(0, 80) + (content.length > 80 ? "..." : "");
+		const inferredTitle =
+			content.slice(0, 80) + (content.length > 80 ? "..." : "");
 		await prisma.chatSession.update({
 			where: { id: sessionId },
 			data: { title: inferredTitle },
@@ -507,5 +572,3 @@ export async function deleteSession(userId: string, sessionId: string) {
 
 	await prisma.chatSession.delete({ where: { id: sessionId } });
 }
-
-

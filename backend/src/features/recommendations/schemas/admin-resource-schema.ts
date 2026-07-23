@@ -24,4 +24,3 @@ export const createResourceSchema = z.object({
 export const updateResourceSchema = createResourceSchema.partial().extend({
 	active: z.boolean().optional(),
 });
-

@@ -22,7 +22,12 @@ export async function getSolutionController(
 		}
 
 		const { title, description, language, userCode } = parsed.data;
-		const result = await generateSolution(title, description, language, userCode);
+		const result = await generateSolution(
+			title,
+			description,
+			language,
+			userCode,
+		);
 		return res.json(result);
 	} catch (err) {
 		next(err);

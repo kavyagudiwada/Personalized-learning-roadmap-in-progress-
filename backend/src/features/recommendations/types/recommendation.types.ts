@@ -15,4 +15,3 @@ export interface ResourceRecommendationResponse {
 	bookmarked: boolean;
 	createdAt: string;
 }
-

@@ -43,5 +43,3 @@ export const fullAnalyzeSchema = z.object({
 	careerGoal: careerGoalEnum,
 	experienceLevel: z.enum(["fresher", "mid", "senior"]).optional(),
 });
-
-

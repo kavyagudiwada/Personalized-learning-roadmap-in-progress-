@@ -4,12 +4,11 @@ import {
 	CAREER_GOAL_PROFILES,
 	getCareerProfile,
 } from "@/features/skill-gap-analysis/services/career-goals-service";
-import type {
-	WeightedSkill,
-} from "@/features/skill-gap-analysis/types/skill-gap.types";
+import type { WeightedSkill } from "@/features/skill-gap-analysis/types/skill-gap.types";
 import { generateEmbedding } from "@/services/rag/embedding";
 import { storeVectors, VECTOR_COLLECTIONS } from "@/services/rag/vector-store";
 import type { GeneratedJobPosting } from "./job-posting-generator";
+
 const MARKET_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface MarketProfileData {
@@ -25,7 +24,10 @@ export function aggregatePostingsIntoProfile(
 	careerGoal: string,
 	postings: GeneratedJobPosting[],
 ): MarketProfileData {
-	const skillFrequency = new Map<string, { count: number; seniority: Set<string> }>();
+	const skillFrequency = new Map<
+		string,
+		{ count: number; seniority: Set<string> }
+	>();
 	const companies = new Set<string>();
 	const seniorityCounts = { junior: 0, mid: 0, senior: 0 };
 
@@ -36,7 +38,10 @@ export function aggregatePostingsIntoProfile(
 		for (const skill of p.requiredSkills) {
 			const norm = skill.trim();
 			if (!norm) continue;
-			const existing = skillFrequency.get(norm) || { count: 0, seniority: new Set() };
+			const existing = skillFrequency.get(norm) || {
+				count: 0,
+				seniority: new Set(),
+			};
 			existing.count++;
 			if (p.seniority) existing.seniority.add(p.seniority);
 			skillFrequency.set(norm, existing);
@@ -44,22 +49,37 @@ export function aggregatePostingsIntoProfile(
 		for (const skill of p.niceToHaveSkills) {
 			const norm = skill.trim();
 			if (!norm) continue;
-			const existing = skillFrequency.get(norm) || { count: 0, seniority: new Set() };
+			const existing = skillFrequency.get(norm) || {
+				count: 0,
+				seniority: new Set(),
+			};
 			existing.count++;
 			if (p.seniority) existing.seniority.add(p.seniority);
 			skillFrequency.set(norm, existing);
 		}
 	}
 
-	const maxFreq = Math.max(...Array.from(skillFrequency.values()).map((s) => s.count), 1);
+	const maxFreq = Math.max(
+		...Array.from(skillFrequency.values()).map((s) => s.count),
+		1,
+	);
 	const weightedSkills: WeightedSkill[] = Array.from(skillFrequency.entries())
 		.map(([name, info]) => {
 			let category: "core" | "tool" | "soft" = "tool";
-			const staticProfile = CAREER_GOAL_PROFILES[careerGoal as keyof typeof CAREER_GOAL_PROFILES];
+			const staticProfile =
+				CAREER_GOAL_PROFILES[careerGoal as keyof typeof CAREER_GOAL_PROFILES];
 			if (staticProfile) {
-				if (staticProfile.coreSkills.some((s) => s.toLowerCase() === name.toLowerCase())) {
+				if (
+					staticProfile.coreSkills.some(
+						(s) => s.toLowerCase() === name.toLowerCase(),
+					)
+				) {
 					category = "core";
-				} else if (staticProfile.softSkills.some((s) => s.toLowerCase() === name.toLowerCase())) {
+				} else if (
+					staticProfile.softSkills.some(
+						(s) => s.toLowerCase() === name.toLowerCase(),
+					)
+				) {
 					category = "soft";
 				}
 			}
@@ -74,16 +94,12 @@ export function aggregatePostingsIntoProfile(
 
 	const coreSkills = [
 		...new Set(
-			weightedSkills
-				.filter((s) => s.category === "core")
-				.map((s) => s.name),
+			weightedSkills.filter((s) => s.category === "core").map((s) => s.name),
 		),
 	];
 	const tools = [
 		...new Set(
-			weightedSkills
-				.filter((s) => s.category === "tool")
-				.map((s) => s.name),
+			weightedSkills.filter((s) => s.category === "tool").map((s) => s.name),
 		),
 	];
 
@@ -107,7 +123,10 @@ export function mergeProfiles(
 } {
 	const staticProfile = getCareerProfile(careerGoal);
 	const staticWeights = new Map(
-		staticProfile.weightedSkills.map((ws) => [ws.name.toLowerCase(), ws.weight]),
+		staticProfile.weightedSkills.map((ws) => [
+			ws.name.toLowerCase(),
+			ws.weight,
+		]),
 	);
 	const marketWeightMap = new Map(
 		marketProfile.weightedSkills.map((ws) => [ws.name.toLowerCase(), ws]),
@@ -145,18 +164,10 @@ export function mergeProfiles(
 	merged.sort((a, b) => b.weight - a.weight);
 
 	const coreSkills = [
-		...new Set(
-			merged
-				.filter((s) => s.category === "core")
-				.map((s) => s.name),
-		),
+		...new Set(merged.filter((s) => s.category === "core").map((s) => s.name)),
 	];
 	const tools = [
-		...new Set(
-			merged
-				.filter((s) => s.category === "tool")
-				.map((s) => s.name),
-		),
+		...new Set(merged.filter((s) => s.category === "tool").map((s) => s.name)),
 	];
 
 	return { weightedSkills: merged, coreSkills, tools };
@@ -176,11 +187,17 @@ export async function getMarketProfile(
 		if (Date.now() < expiresAt) {
 			return {
 				careerGoal: cached.careerGoal,
-				weightedSkills: JSON.parse(JSON.stringify(cached.weightedSkills)) as WeightedSkill[],
-				coreSkills: (JSON.parse(JSON.stringify(cached.weightedSkills)) as WeightedSkill[])
+				weightedSkills: JSON.parse(
+					JSON.stringify(cached.weightedSkills),
+				) as WeightedSkill[],
+				coreSkills: (
+					JSON.parse(JSON.stringify(cached.weightedSkills)) as WeightedSkill[]
+				)
 					.filter((s) => s.category === "core")
 					.map((s) => s.name),
-				tools: (JSON.parse(JSON.stringify(cached.weightedSkills)) as WeightedSkill[])
+				tools: (
+					JSON.parse(JSON.stringify(cached.weightedSkills)) as WeightedSkill[]
+				)
 					.filter((s) => s.category === "tool")
 					.map((s) => s.name),
 				topCompanies: cached.topCompanies as string[],

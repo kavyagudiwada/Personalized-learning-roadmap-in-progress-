@@ -4,10 +4,10 @@ import {
 	analyzeResumeController,
 	analyzeSkillGapController,
 	fullAnalyzeController,
-	getLatestSkillGapController,
-	getJobMatchesController,
-	getProgressHistoryController,
 	getCareerGoalsController,
+	getJobMatchesController,
+	getLatestSkillGapController,
+	getProgressHistoryController,
 } from "../controllers/skill-gap-controller";
 
 const router = Router();

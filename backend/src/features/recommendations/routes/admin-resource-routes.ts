@@ -7,6 +7,7 @@ import {
 	listResourcesController,
 	updateResourceController,
 } from "../controllers/admin-resource-controller";
+
 const router = Router();
 
 router.use(authenticateToken);

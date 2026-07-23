@@ -1,8 +1,8 @@
 import type { Response } from "express";
-import type { AuthRequest } from "@/middleware/authenticate";
 import { prisma } from "@/database";
-import { AppError } from "@/utils/errors";
+import type { AuthRequest } from "@/middleware/authenticate";
 import { retrieveJobPostingsForUser } from "@/services/rag/retrievers";
+import { AppError } from "@/utils/errors";
 import {
 	analyzeResumeSchema,
 	analyzeSkillGapSchema,
@@ -64,10 +64,7 @@ export async function analyzeSkillGapController(
 	return res.json(result);
 }
 
-export async function fullAnalyzeController(
-	req: AuthRequest,
-	res: Response,
-) {
+export async function fullAnalyzeController(req: AuthRequest, res: Response) {
 	const user = ensureUser(req);
 	const parsed = fullAnalyzeSchema.safeParse(req.body);
 	if (!parsed.success) {
@@ -98,10 +95,7 @@ export async function getLatestSkillGapController(
 	return res.json(result);
 }
 
-export async function getJobMatchesController(
-	req: AuthRequest,
-	res: Response,
-) {
+export async function getJobMatchesController(req: AuthRequest, res: Response) {
 	const user = ensureUser(req);
 	const { careerGoal } = req.query;
 
@@ -116,7 +110,10 @@ export async function getJobMatchesController(
 
 	const skills = userRecord?.skills || [];
 	if (skills.length === 0) {
-		return res.json({ message: "No skills found for user. Run a skill gap analysis first.", matches: [] });
+		return res.json({
+			message: "No skills found for user. Run a skill gap analysis first.",
+			matches: [],
+		});
 	}
 
 	const matches = await retrieveJobPostingsForUser(skills, careerGoal, 20);

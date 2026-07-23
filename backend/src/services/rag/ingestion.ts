@@ -1,8 +1,8 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/database";
 import { generateEmbedding } from "./embedding";
-import { storeVectors, VECTOR_COLLECTIONS } from "./vector-store";
 import { jobPostings } from "./job-postings-seed";
+import { storeVectors, VECTOR_COLLECTIONS } from "./vector-store";
 
 export async function ingestCareerProfilesToVectorStore(): Promise<void> {
 	const profiles = await prisma.vectorDocument.findMany({
@@ -153,7 +153,10 @@ export async function seedDefaultVectors(): Promise<void> {
 			title: "Site Reliability Engineer (SRE)",
 			content:
 				"Core skills: Linux, Scripting, Monitoring, Incident Response, Reliability Engineering, Automation, Distributed Systems. Tools: Go, Python, Prometheus, Grafana, Kubernetes, Docker, Terraform. Soft skills: Incident response, On-call readiness, Calm under pressure. Typical timeline: 6-10 months.",
-			metadata: { careerGoal: "Site Reliability Engineer (SRE)", category: "core" },
+			metadata: {
+				careerGoal: "Site Reliability Engineer (SRE)",
+				category: "core",
+			},
 		},
 		{
 			title: "UI/UX Designer",
@@ -1740,7 +1743,9 @@ export async function seedDefaultVectors(): Promise<void> {
 		if (!embedding) continue;
 		await storeVectors(VECTOR_COLLECTIONS.JOB_REQUIREMENTS, [
 			{
-				id: `${posting.metadata.company}-${posting.title}`.replace(/\s+/g, "-").toLowerCase(),
+				id: `${posting.metadata.company}-${posting.title}`
+					.replace(/\s+/g, "-")
+					.toLowerCase(),
 				title: posting.title,
 				content: posting.content,
 				embedding,

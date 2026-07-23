@@ -19,12 +19,18 @@ export async function runCodeController(req: AuthRequest, res: Response) {
 	};
 
 	if (!code || !language || !fnName || !testCases?.length) {
-		throw new AppError("Missing required fields: code, language, fnName, testCases", 400);
+		throw new AppError(
+			"Missing required fields: code, language, fnName, testCases",
+			400,
+		);
 	}
 
 	const supported = ["javascript", "python", "java", "cpp"];
 	if (!supported.includes(language)) {
-		throw new AppError(`Unsupported language: ${language}. Supported: ${supported.join(", ")}`, 400);
+		throw new AppError(
+			`Unsupported language: ${language}. Supported: ${supported.join(", ")}`,
+			400,
+		);
 	}
 
 	const results = await runCode(code, language, fnName, testCases);

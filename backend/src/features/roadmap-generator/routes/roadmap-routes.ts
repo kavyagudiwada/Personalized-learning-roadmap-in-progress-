@@ -2,10 +2,10 @@ import { Router } from "express";
 import { authenticateToken } from "@/middleware/authenticate";
 import {
 	createRoadmapController,
-	listRoadmapsController,
-	getRoadmapController,
-	updatePhaseController,
 	deleteRoadmapController,
+	getRoadmapController,
+	listRoadmapsController,
+	updatePhaseController,
 } from "../controllers/roadmap-controller";
 
 const router = Router();

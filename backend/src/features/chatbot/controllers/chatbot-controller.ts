@@ -1,13 +1,16 @@
 import type { Response } from "express";
 import type { AuthRequest } from "@/middleware/authenticate";
 import { AppError } from "@/utils/errors";
-import { createSessionSchema, sendMessageSchema } from "../schemas/chatbot-schema";
 import {
-	getOrCreateSession,
-	getUserSessions,
-	getSessionMessages,
-	sendMessage,
+	createSessionSchema,
+	sendMessageSchema,
+} from "../schemas/chatbot-schema";
+import {
 	deleteSession,
+	getOrCreateSession,
+	getSessionMessages,
+	getUserSessions,
+	sendMessage,
 } from "../services/chatbot-service";
 
 function ensureUser(req: AuthRequest): NonNullable<AuthRequest["user"]> {
@@ -29,7 +32,10 @@ export async function listSessionsController(req: AuthRequest, res: Response) {
 	return res.json({ sessions });
 }
 
-export async function getSessionMessagesController(req: AuthRequest, res: Response) {
+export async function getSessionMessagesController(
+	req: AuthRequest,
+	res: Response,
+) {
 	const user = ensureUser(req);
 	const { sessionId } = req.params;
 	if (!sessionId) throw new AppError("sessionId parameter is required", 400);
@@ -41,7 +47,11 @@ export async function sendMessageController(req: AuthRequest, res: Response) {
 	const user = ensureUser(req);
 	const parsed = sendMessageSchema.safeParse(req.body);
 	if (!parsed.success) {
-		throw new AppError("Invalid request body", 400, parsed.error.flatten().fieldErrors);
+		throw new AppError(
+			"Invalid request body",
+			400,
+			parsed.error.flatten().fieldErrors,
+		);
 	}
 
 	const { sessionId, content, fileData } = parsed.data;

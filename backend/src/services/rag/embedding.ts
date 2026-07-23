@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const EMBEDDING_MODELS = ["text-embedding-004", "embedding-001", "gemini-embedding-exp-03-07"];
+const EMBEDDING_MODELS = [
+	"text-embedding-004",
+	"embedding-001",
+	"gemini-embedding-exp-03-07",
+];
 
 export async function generateEmbedding(
 	text: string,
@@ -20,11 +24,8 @@ export async function generateEmbedding(
 			);
 			const values = response.data?.embedding?.values as number[];
 			if (values && values.length > 0) return values;
-		} catch {
-			continue;
-		}
+		} catch {}
 	}
 
 	return null;
 }
-

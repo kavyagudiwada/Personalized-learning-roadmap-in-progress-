@@ -107,9 +107,9 @@ export async function retrieveJobPostings(
 		title: r.title,
 		content: r.content,
 		metadata: {
-			careerGoal: r.metadata?.careerGoal as string || careerGoal,
-			company: r.metadata?.company as string || "Unknown",
-			seniority: r.metadata?.seniority as string || "mid",
+			careerGoal: (r.metadata?.careerGoal as string) || careerGoal,
+			company: (r.metadata?.company as string) || "Unknown",
+			seniority: (r.metadata?.seniority as string) || "mid",
 			requiredSkills: (r.metadata?.requiredSkills as string[]) || [],
 			niceToHaveSkills: (r.metadata?.niceToHaveSkills as string[]) || [],
 		},
@@ -144,25 +144,26 @@ export async function retrieveJobPostingsForUser(
 		{ careerGoal },
 	);
 
-	return results.map((r) => {
-		const required = (r.metadata?.requiredSkills as string[]) || [];
-		const matched = required.filter((s) =>
-			userSkills.some((us) =>
-				us.toLowerCase() === s.toLowerCase(),
-			),
-		);
-		const matchScore = required.length > 0
-			? Math.round((matched.length / required.length) * 100)
-			: 0;
+	return results
+		.map((r) => {
+			const required = (r.metadata?.requiredSkills as string[]) || [];
+			const matched = required.filter((s) =>
+				userSkills.some((us) => us.toLowerCase() === s.toLowerCase()),
+			);
+			const matchScore =
+				required.length > 0
+					? Math.round((matched.length / required.length) * 100)
+					: 0;
 
-		return {
-			title: r.title,
-			company: (r.metadata?.company as string) || "Unknown",
-			seniority: (r.metadata?.seniority as string) || "mid",
-			location: (r.metadata?.location as string) || "Remote",
-			matchScore,
-			matchedSkills: matched,
-			missingSkills: required.filter((s) => !matched.includes(s)),
-		};
-	}).sort((a, b) => b.matchScore - a.matchScore);
+			return {
+				title: r.title,
+				company: (r.metadata?.company as string) || "Unknown",
+				seniority: (r.metadata?.seniority as string) || "mid",
+				location: (r.metadata?.location as string) || "Remote",
+				matchScore,
+				matchedSkills: matched,
+				missingSkills: required.filter((s) => !matched.includes(s)),
+			};
+		})
+		.sort((a, b) => b.matchScore - a.matchScore);
 }

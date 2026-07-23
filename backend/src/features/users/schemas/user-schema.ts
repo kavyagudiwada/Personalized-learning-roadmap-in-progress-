@@ -13,6 +13,7 @@ export const syncGithubSchema = z.object({
 	githubUsername: z.string().min(1, "GitHub username is required"),
 });
 
-export const updateLearningPreferencesSchema = z.record(z.string(), z.unknown());
-
-
+export const updateLearningPreferencesSchema = z.record(
+	z.string(),
+	z.unknown(),
+);

@@ -20,14 +20,18 @@ async function seedGoal(goal: string): Promise<void> {
 		return;
 	}
 
-	console.log(`[${goal}] ✅ Generated ${postings.length} postings in ${(Date.now() - start) / 1000}s`);
+	console.log(
+		`[${goal}] ✅ Generated ${postings.length} postings in ${(Date.now() - start) / 1000}s`,
+	);
 
 	const profile = aggregatePostingsIntoProfile(goal, postings);
 	await saveMarketProfile(profile);
 
 	console.log(`[${goal}] 📊 Market profile saved:`);
 	console.log(`       Skills: ${profile.weightedSkills.length}`);
-	console.log(`       Top Companies: ${profile.topCompanies.slice(0, 4).join(", ")}`);
+	console.log(
+		`       Top Companies: ${profile.topCompanies.slice(0, 4).join(", ")}`,
+	);
 
 	await saveJobPostings(goal, postings);
 	console.log(`[${goal}] 💾 ${postings.length} raw job postings saved to DB`);

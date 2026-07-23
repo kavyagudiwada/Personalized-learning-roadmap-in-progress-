@@ -1,5 +1,6 @@
-import axios from "axios";
 import type { AxiosError } from "axios";
+import axios from "axios";
+
 const { PDFParse, VerbosityLevel } = require("pdf-parse");
 
 // --- RPM / rate limit tracking ---
@@ -30,7 +31,9 @@ function checkRpm(provider: string): boolean {
 	}
 
 	if (timestamps.length >= max) {
-		console.warn(`RPM limit reached for ${provider} (${timestamps.length}/${max}) — skipping`);
+		console.warn(
+			`RPM limit reached for ${provider} (${timestamps.length}/${max}) — skipping`,
+		);
 		return false;
 	}
 
@@ -39,7 +42,7 @@ function checkRpm(provider: string): boolean {
 }
 
 // --- Global request queue (semaphore: 1 concurrent AI call) ---
-let aiQueue: (() => void)[] = [];
+const aiQueue: (() => void)[] = [];
 let aiRunning = false;
 
 async function acquire(): Promise<void> {
@@ -82,7 +85,11 @@ function parseJsonResponse(text: string): Record<string, unknown> {
 	const jsonMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
 	const jsonStr = jsonMatch ? jsonMatch[1].trim() : cleaned;
 	const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
-	if (typeof parsed !== "object" || parsed === null || Object.keys(parsed).length === 0) {
+	if (
+		typeof parsed !== "object" ||
+		parsed === null ||
+		Object.keys(parsed).length === 0
+	) {
 		throw new Error("Empty or invalid JSON response");
 	}
 	return parsed;
@@ -103,7 +110,9 @@ async function extractTextFromFile(fileData: {
 			});
 			await pdf.load();
 			const pages = await pdf.getText();
-			const text = Array.isArray(pages) ? pages.join("\n") : String(pages ?? "");
+			const text = Array.isArray(pages)
+				? pages.join("\n")
+				: String(pages ?? "");
 			return text.trim() || null;
 		} catch (err: unknown) {
 			console.error(
@@ -118,7 +127,9 @@ async function extractTextFromFile(fileData: {
 		return buffer.toString("utf-8").trim() || null;
 	}
 
-	console.warn(`File extraction skipped: unsupported file type "${mime}" (use PDF)`);
+	console.warn(
+		`File extraction skipped: unsupported file type "${mime}" (use PDF)`,
+	);
 	return null;
 }
 
@@ -160,7 +171,13 @@ async function callGemini(
 				contents: [{ parts }],
 				generationConfig: { responseMimeType: "application/json" },
 			},
-			{ headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, timeout: AI_TIMEOUT_MS },
+			{
+				headers: {
+					"Content-Type": "application/json",
+					"x-goog-api-key": apiKey,
+				},
+				timeout: AI_TIMEOUT_MS,
+			},
 		);
 
 		const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -204,7 +221,11 @@ async function callGroq(
 			{
 				model,
 				messages: [
-					{ role: "system", content: "You are a precise JSON generator. Always respond with valid JSON matching the requested schema exactly." },
+					{
+						role: "system",
+						content:
+							"You are a precise JSON generator. Always respond with valid JSON matching the requested schema exactly.",
+					},
 					{ role: "user", content: userContent },
 				],
 				temperature: 0.2,
@@ -245,7 +266,11 @@ async function callGitHubModels(
 			{
 				model: "gpt-4o-mini",
 				messages: [
-					{ role: "system", content: "You are a precise JSON generator. Always respond with valid JSON matching the requested schema exactly." },
+					{
+						role: "system",
+						content:
+							"You are a precise JSON generator. Always respond with valid JSON matching the requested schema exactly.",
+					},
 					{ role: "user", content: prompt },
 				],
 				response_format: { type: "json_object" },

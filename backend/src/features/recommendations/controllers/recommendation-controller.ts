@@ -1,5 +1,4 @@
 import type { NextFunction, Response } from "express";
-import type { AuthRequest } from "@/middleware/authenticate";
 import { aggregateProfileNode } from "@/features/ai-agents/services/aggregate-service";
 import { githubAnalysisNode } from "@/features/ai-agents/services/github-service";
 import { persistResultsNode } from "@/features/ai-agents/services/persist-service";
@@ -7,6 +6,7 @@ import { resourceRecommendationNode } from "@/features/ai-agents/services/resour
 import { resumeAnalysisNode } from "@/features/ai-agents/services/resume-service";
 import { skillGapAnalysisNode } from "@/features/ai-agents/services/skill-gap-service";
 import type { AgentState } from "@/features/ai-agents/types/agent.types";
+import type { AuthRequest } from "@/middleware/authenticate";
 import { AppError } from "@/utils/errors";
 import {
 	bookmarkResourceSchema,

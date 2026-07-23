@@ -1,38 +1,77 @@
-import type { MarketDerivedProfile, WeightedSkill } from "../types/skill-gap.types";
 import { retrieveJobPostings } from "@/services/rag/retrievers";
 import { resolveAliases } from "@/utils/skill-matching";
+import type {
+	MarketDerivedProfile,
+	WeightedSkill,
+} from "../types/skill-gap.types";
 
 const REPO_SKILL_KEYWORDS: Record<string, string> = {
-	react: "React", node: "Node.js", express: "Express.js",
-	mongodb: "MongoDB", mysql: "MySQL", postgresql: "PostgreSQL",
-	docker: "Docker", kubernetes: "Kubernetes", aws: "AWS",
-	graphql: "GraphQL", redux: "Redux", nextjs: "Next.js",
-	"next.js": "Next.js", vue: "Vue.js", angular: "Angular",
-	tailwind: "Tailwind CSS", django: "Django", flask: "Flask",
-	spring: "Spring Boot", tensorflow: "TensorFlow", pytorch: "PyTorch",
-	git: "Git", linux: "Linux", terraform: "Terraform",
-	"ci/cd": "CI/CD", kafka: "Kafka", redis: "Redis",
-	"rest api": "REST APIs", api: "REST APIs",
-	pandas: "Pandas", numpy: "NumPy", scikit: "Scikit-learn",
-	"machine learning": "Machine Learning", "deep learning": "Deep Learning",
-	typescript: "TypeScript", javascript: "JavaScript", python: "Python",
-	java: "Java", go: "Go", rust: "Rust", cplusplus: "C++",
-	csharp: "C#", kotlin: "Kotlin", swift: "Swift",
-	sql: "SQL", html: "HTML", css: "CSS",
-	bash: "Bash", shell: "Shell Scripting",
+	react: "React",
+	node: "Node.js",
+	express: "Express.js",
+	mongodb: "MongoDB",
+	mysql: "MySQL",
+	postgresql: "PostgreSQL",
+	docker: "Docker",
+	kubernetes: "Kubernetes",
+	aws: "AWS",
+	graphql: "GraphQL",
+	redux: "Redux",
+	nextjs: "Next.js",
+	"next.js": "Next.js",
+	vue: "Vue.js",
+	angular: "Angular",
+	tailwind: "Tailwind CSS",
+	django: "Django",
+	flask: "Flask",
+	spring: "Spring Boot",
+	tensorflow: "TensorFlow",
+	pytorch: "PyTorch",
+	git: "Git",
+	linux: "Linux",
+	terraform: "Terraform",
+	"ci/cd": "CI/CD",
+	kafka: "Kafka",
+	redis: "Redis",
+	"rest api": "REST APIs",
+	api: "REST APIs",
+	pandas: "Pandas",
+	numpy: "NumPy",
+	scikit: "Scikit-learn",
+	"machine learning": "Machine Learning",
+	"deep learning": "Deep Learning",
+	typescript: "TypeScript",
+	javascript: "JavaScript",
+	python: "Python",
+	java: "Java",
+	go: "Go",
+	rust: "Rust",
+	cplusplus: "C++",
+	csharp: "C#",
+	kotlin: "Kotlin",
+	swift: "Swift",
+	sql: "SQL",
+	html: "HTML",
+	css: "CSS",
+	bash: "Bash",
+	shell: "Shell Scripting",
 };
 
 export function inferSkillsFromRepos(
-	repos: { language: string | null; name: string; description: string | null }[],
+	repos: {
+		language: string | null;
+		name: string;
+		description: string | null;
+	}[],
 ): Set<string> {
 	const skills = new Set<string>();
 	for (const repo of repos) {
 		if (repo.language) skills.add(repo.language);
 		const text = `${repo.name} ${repo.description || ""}`.toLowerCase();
-	for (const [keyword, skill] of Object.entries(REPO_SKILL_KEYWORDS)) {
-		const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-		if (new RegExp(`\\b${escaped}\\b`, "i").test(text)) skills.add(skill);
-	}
+		for (const [keyword, skill] of Object.entries(REPO_SKILL_KEYWORDS)) {
+			const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			if (new RegExp(`\\b${escaped}\\b`, "i").test(text)) skills.add(skill);
+		}
 	}
 	return skills;
 }
@@ -415,15 +454,7 @@ export const CAREER_GOAL_PROFILES: Record<CareerGoal, CareerGoalProfile> = {
 			"Data Modeling",
 			"Business Acumen",
 		],
-		tools: [
-			"Tableau",
-			"Power BI",
-			"Looker",
-			"Excel",
-			"R",
-			"Airflow",
-			"Spark",
-		],
+		tools: ["Tableau", "Power BI", "Looker", "Excel", "R", "Airflow", "Spark"],
 		softSkills: [
 			"Business acumen",
 			"Storytelling with data",
@@ -652,10 +683,7 @@ export const CAREER_GOAL_PROFILES: Record<CareerGoal, CareerGoalProfile> = {
 			"Causal reasoning",
 			"Stakeholder communication",
 		],
-		certifications: [
-			"AWS ML Specialty",
-			"Google Professional Data Scientist",
-		],
+		certifications: ["AWS ML Specialty", "Google Professional Data Scientist"],
 		typicalTimeline: "6-12 months",
 		weightedSkills: [
 			{ name: "Statistics", weight: 10, category: "core" },
@@ -699,11 +727,7 @@ export const CAREER_GOAL_PROFILES: Record<CareerGoal, CareerGoalProfile> = {
 			"On-call readiness",
 			"Calm under pressure",
 		],
-		certifications: [
-			"Google SRE Fundamentals",
-			"CKA",
-			"AWS DevOps Engineer",
-		],
+		certifications: ["Google SRE Fundamentals", "CKA", "AWS DevOps Engineer"],
 		typicalTimeline: "6-10 months",
 		weightedSkills: [
 			{ name: "Linux", weight: 10, category: "core" },
@@ -842,10 +866,7 @@ export const CAREER_GOAL_PROFILES: Record<CareerGoal, CareerGoalProfile> = {
 			"Rapid prototyping",
 			"Adaptability",
 		],
-		certifications: [
-			"AWS Cloud Practitioner",
-			"HashiCorp Terraform Associate",
-		],
+		certifications: ["AWS Cloud Practitioner", "HashiCorp Terraform Associate"],
 		typicalTimeline: "3-6 months",
 		weightedSkills: [
 			{ name: "Full-Stack Development", weight: 10, category: "core" },
@@ -866,16 +887,56 @@ export const CAREER_GOAL_PROFILES: Record<CareerGoal, CareerGoalProfile> = {
 	},
 };
 
-const FRESHER_BOOST = ["SQL", "Git", "JavaScript", "TypeScript", "HTML", "CSS", "Python", "Java", "Testing", "Communication", "Data Structures", "Algorithms", "Object-Oriented Programming", "REST APIs", "Linux"];
-const SENIOR_BOOST = ["System Design", "Distributed Systems", "Architecture", "Leadership", "Mentoring", "Performance Optimization", "Incident Response", "Reliability Engineering", "Product Strategy", "Stakeholder Management", "Team Management", "Cross-functional", "Mentorship", "Ownership"];
+const FRESHER_BOOST = [
+	"SQL",
+	"Git",
+	"JavaScript",
+	"TypeScript",
+	"HTML",
+	"CSS",
+	"Python",
+	"Java",
+	"Testing",
+	"Communication",
+	"Data Structures",
+	"Algorithms",
+	"Object-Oriented Programming",
+	"REST APIs",
+	"Linux",
+];
+const SENIOR_BOOST = [
+	"System Design",
+	"Distributed Systems",
+	"Architecture",
+	"Leadership",
+	"Mentoring",
+	"Performance Optimization",
+	"Incident Response",
+	"Reliability Engineering",
+	"Product Strategy",
+	"Stakeholder Management",
+	"Team Management",
+	"Cross-functional",
+	"Mentorship",
+	"Ownership",
+];
 
-export function getProfileForLevel(profile: CareerGoalProfile, level: ExperienceLevel): CareerGoalProfile {
+export function getProfileForLevel(
+	profile: CareerGoalProfile,
+	level: ExperienceLevel,
+): CareerGoalProfile {
 	const adjusted = { ...profile, weightedSkills: [...profile.weightedSkills] };
 	for (const ws of adjusted.weightedSkills) {
-		if (level === "fresher" && FRESHER_BOOST.some((f) => ws.name.toLowerCase().includes(f.toLowerCase()))) {
+		if (
+			level === "fresher" &&
+			FRESHER_BOOST.some((f) => ws.name.toLowerCase().includes(f.toLowerCase()))
+		) {
 			ws.weight = Math.min(10, ws.weight + 2);
 		}
-		if (level === "senior" && SENIOR_BOOST.some((f) => ws.name.toLowerCase().includes(f.toLowerCase()))) {
+		if (
+			level === "senior" &&
+			SENIOR_BOOST.some((f) => ws.name.toLowerCase().includes(f.toLowerCase()))
+		) {
 			ws.weight = Math.min(10, ws.weight + 3);
 		}
 	}
@@ -884,7 +945,11 @@ export function getProfileForLevel(profile: CareerGoalProfile, level: Experience
 		for (const skill of profile.fresherSkills) {
 			if (!existing.has(skill)) {
 				adjusted.coreSkills.push(skill);
-				adjusted.weightedSkills.push({ name: skill, weight: 8, category: "core" });
+				adjusted.weightedSkills.push({
+					name: skill,
+					weight: 8,
+					category: "core",
+				});
 			}
 		}
 	}
@@ -893,7 +958,11 @@ export function getProfileForLevel(profile: CareerGoalProfile, level: Experience
 		for (const skill of profile.seniorSkills) {
 			if (!existing.has(skill)) {
 				adjusted.coreSkills.push(skill);
-				adjusted.weightedSkills.push({ name: skill, weight: 9, category: "core" });
+				adjusted.weightedSkills.push({
+					name: skill,
+					weight: 9,
+					category: "core",
+				});
 			}
 		}
 	}
@@ -913,9 +982,14 @@ function parseDurationYears(duration: string): number {
 	return val;
 }
 
-export function inferExperienceLevel(experience?: { role: string; company: string; duration: string }[]): ExperienceLevel {
+export function inferExperienceLevel(
+	experience?: { role: string; company: string; duration: string }[],
+): ExperienceLevel {
 	if (!experience || experience.length === 0) return "fresher";
-	const totalYears = experience.reduce((acc, exp) => acc + parseDurationYears(exp.duration), 0);
+	const totalYears = experience.reduce(
+		(acc, exp) => acc + parseDurationYears(exp.duration),
+		0,
+	);
 	if (totalYears <= 1) return "fresher";
 	if (totalYears <= 5) return "mid";
 	return "senior";
@@ -933,9 +1007,14 @@ function skillMatches(userSkills: string[], target: string): boolean {
 	});
 }
 
-export function getCareerProfile(careerGoal: string, level?: ExperienceLevel): CareerGoalProfile {
+export function getCareerProfile(
+	careerGoal: string,
+	level?: ExperienceLevel,
+): CareerGoalProfile {
 	const match = CAREER_GOALS.find((g) => g === careerGoal);
-	const base = match ? CAREER_GOAL_PROFILES[match] : CAREER_GOAL_PROFILES["Full-Stack Developer"];
+	const base = match
+		? CAREER_GOAL_PROFILES[match]
+		: CAREER_GOAL_PROFILES["Full-Stack Developer"];
 	return level ? getProfileForLevel(base, level) : base;
 }
 
@@ -943,7 +1022,11 @@ export function categorizeSkillsForGoal(
 	userSkills: string[],
 	careerGoal: string,
 	level?: ExperienceLevel,
-	customWeights?: { weightedSkills: WeightedSkill[]; coreSkills: string[]; tools: string[] },
+	customWeights?: {
+		weightedSkills: WeightedSkill[];
+		coreSkills: string[];
+		tools: string[];
+	},
 	repoSkills?: Set<string>,
 	seniorityPostingSkillsRaw?: Set<string>,
 ): {
@@ -952,11 +1035,20 @@ export function categorizeSkillsForGoal(
 	improving: string[];
 	weak: string[];
 	gapPriority: Record<string, "now" | "later">;
-	skillCategories: { core: { matched: string[]; missing: string[] }; tools: { matched: string[]; missing: string[] }; soft: { matched: string[]; missing: string[] } };
+	skillCategories: {
+		core: { matched: string[]; missing: string[] };
+		tools: { matched: string[]; missing: string[] };
+		soft: { matched: string[]; missing: string[] };
+	};
 } {
 	userSkills = resolveAliases(userSkills);
 	const profile = customWeights
-		? { ...getCareerProfile(careerGoal, level), weightedSkills: customWeights.weightedSkills, coreSkills: customWeights.coreSkills, tools: customWeights.tools }
+		? {
+				...getCareerProfile(careerGoal, level),
+				weightedSkills: customWeights.weightedSkills,
+				coreSkills: customWeights.coreSkills,
+				tools: customWeights.tools,
+			}
 		: getCareerProfile(careerGoal, level);
 
 	const marketSkills = getSeniorityPostingSkills(seniorityPostingSkillsRaw);
@@ -988,9 +1080,7 @@ export function categorizeSkillsForGoal(
 	}
 
 	const matchedSoft = profile.softSkills.filter((s) =>
-		userSkills.some((us) =>
-			normalizeSkill(us) === normalizeSkill(s),
-		),
+		userSkills.some((us) => normalizeSkill(us) === normalizeSkill(s)),
 	);
 
 	const gapPriority = computeGapPriority(
@@ -1022,7 +1112,12 @@ export function categorizeSkillsForGoal(
 	};
 }
 
-export function computeMatchScore(userSkills: string[], careerGoal: string, level?: ExperienceLevel, customWeights?: WeightedSkill[]) {
+export function computeMatchScore(
+	userSkills: string[],
+	careerGoal: string,
+	level?: ExperienceLevel,
+	customWeights?: WeightedSkill[],
+) {
 	userSkills = resolveAliases(userSkills);
 	const profile = getCareerProfile(careerGoal, level);
 	const weighted = customWeights || profile.weightedSkills;
@@ -1039,10 +1134,7 @@ export function computeMatchScore(userSkills: string[], careerGoal: string, leve
 
 	const matchScore = Math.max(
 		25,
-		Math.min(
-			95,
-			Math.round((earnedWeight / Math.max(totalWeight, 1)) * 100),
-		),
+		Math.min(95, Math.round((earnedWeight / Math.max(totalWeight, 1)) * 100)),
 	);
 
 	const matchedCore = profile.coreSkills.filter((s) =>
@@ -1069,25 +1161,37 @@ export async function deriveProfileFromMarket(
 		const postings = await retrieveJobPostings(careerGoal, 10);
 		if (!postings || postings.length === 0) return null;
 
-		const skillFrequency = new Map<string, { count: number; category: "core" | "tool" | "soft" }>();
+		const skillFrequency = new Map<
+			string,
+			{ count: number; category: "core" | "tool" | "soft" }
+		>();
 		const companies = new Set<string>();
 
 		for (const posting of postings) {
 			if (posting.metadata.company) companies.add(posting.metadata.company);
 			for (const skill of posting.metadata.requiredSkills || []) {
-				const existing = skillFrequency.get(skill) || { count: 0, category: "core" as const };
+				const existing = skillFrequency.get(skill) || {
+					count: 0,
+					category: "core" as const,
+				};
 				existing.count++;
 				skillFrequency.set(skill, existing);
 			}
 			for (const skill of posting.metadata.niceToHaveSkills || []) {
-				const existing = skillFrequency.get(skill) || { count: 0, category: "tool" as const };
+				const existing = skillFrequency.get(skill) || {
+					count: 0,
+					category: "tool" as const,
+				};
 				existing.count++;
 				if (existing.category !== "core") existing.category = "tool";
 				skillFrequency.set(skill, existing);
 			}
 		}
 
-		const maxFreq = Math.max(...Array.from(skillFrequency.values()).map((s) => s.count), 1);
+		const maxFreq = Math.max(
+			...Array.from(skillFrequency.values()).map((s) => s.count),
+			1,
+		);
 		const weightedSkills: WeightedSkill[] = Array.from(skillFrequency.entries())
 			.map(([name, info]) => ({
 				name,

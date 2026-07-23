@@ -1,3 +1,5 @@
+import { prisma } from "@/database";
+import type { AgentState } from "@/features/ai-agents/types/agent.types";
 import {
 	applySkillGapScores,
 	buildMockSkillGap,
@@ -7,8 +9,6 @@ import {
 	inferSkillsFromRepos,
 } from "@/features/skill-gap-analysis/services/career-goals-service";
 import { callAI } from "@/services/ai-service";
-import { prisma } from "@/database";
-import type { AgentState } from "@/features/ai-agents/types/agent.types";
 import { buildRagSkillGapPrompt } from "@/services/rag/prompts";
 import { retrieveJobRequirements } from "@/services/rag/retrievers";
 
@@ -38,7 +38,12 @@ export async function skillGapAnalysisNode(
 				select: { language: true, name: true, description: true },
 			}),
 			prisma.jobPosting.findMany({
-				where: { careerGoal: state.careerGoal, seniority: levelToSeniority(inferExperienceLevel(state.aggregatedExperience)) },
+				where: {
+					careerGoal: state.careerGoal,
+					seniority: levelToSeniority(
+						inferExperienceLevel(state.aggregatedExperience),
+					),
+				},
 				select: { requiredSkills: true, niceToHaveSkills: true },
 			}),
 		]);

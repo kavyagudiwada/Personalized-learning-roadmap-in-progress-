@@ -1,9 +1,9 @@
+import type { AgentState } from "@/features/ai-agents/types/agent.types";
 import {
 	applyResumeScores,
 	buildMockResumeAnalysis,
 } from "@/features/skill-gap-analysis/services/analysis-service";
 import { callAI } from "@/services/ai-service";
-import type { AgentState } from "@/features/ai-agents/types/agent.types";
 import { buildRagResumePrompt } from "@/services/rag/prompts";
 import { retrieveJobRequirements } from "@/services/rag/retrievers";
 

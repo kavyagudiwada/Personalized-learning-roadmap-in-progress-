@@ -20,4 +20,3 @@ export const sendMessageSchema = z.object({
 export const getSessionMessagesSchema = z.object({
 	sessionId: z.string().uuid(),
 });
-
