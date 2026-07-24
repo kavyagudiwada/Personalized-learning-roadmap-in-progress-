@@ -1,0 +1,580 @@
+{
+  "info": {
+    "name": "LearnFlow API Documentation",
+    "description": "Personalized Learning Roadmap - Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://personalized-learning-roadmap-backend.onrender.com"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/sign-up", "host": ["{{baseUrl}}"], "path": ["api", "auth", "sign-up"] }
+          }
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/sign-in", "host": ["{{baseUrl}}"], "path": ["api", "auth", "sign-in"] }
+          }
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/auth/sign-out", "host": ["{{baseUrl}}"], "path": ["api", "auth", "sign-out"] }
+          }
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/auth/get-session", "host": ["{{baseUrl}}"], "path": ["api", "auth", "get-session"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/user/profile", "host": ["{{baseUrl}}"], "path": ["api", "user", "profile"] }
+          }
+        },
+        {
+          "name": "Update Career Goal",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"careerGoal\": \"Full Stack Developer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/career-goal", "host": ["{{baseUrl}}"], "path": ["api", "user", "career-goal"] }
+          }
+        },
+        {
+          "name": "Update Learning Preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferredLearningStyle\": \"hands-on\",\n  \"weeklyHours\": 10\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/learning-preferences", "host": ["{{baseUrl}}"], "path": ["api", "user", "learning-preferences"] }
+          }
+        },
+        {
+          "name": "Upload Resume",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resumeBase64\": \"<base64-encoded-pdf>\",\n  \"mimeType\": \"application/pdf\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/resume", "host": ["{{baseUrl}}"], "path": ["api", "user", "resume"] }
+          }
+        },
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/user/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "user", "dashboard"] }
+          }
+        },
+        {
+          "name": "Sync GitHub",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"githubUsername\": \"kavyagudiwada\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/github/sync", "host": ["{{baseUrl}}"], "path": ["api", "user", "github", "sync"] }
+          }
+        },
+        {
+          "name": "Analyze GitHub",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"githubUsername\": \"kavyagudiwada\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/github/analyze", "host": ["{{baseUrl}}"], "path": ["api", "user", "github", "analyze"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resume",
+      "item": [
+        {
+          "name": "Analyze Resume",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"careerGoal\": \"Full Stack Developer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/resume/analyze", "host": ["{{baseUrl}}"], "path": ["api", "resume", "analyze"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GitHub",
+      "item": [
+        {
+          "name": "Sync Repositories",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"githubUsername\": \"kavyagudiwada\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/github/sync", "host": ["{{baseUrl}}"], "path": ["api", "github", "sync"] }
+          }
+        },
+        {
+          "name": "Analyze Repositories",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"githubUsername\": \"kavyagudiwada\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/github/analyze", "host": ["{{baseUrl}}"], "path": ["api", "github", "analyze"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Skill Gap Analysis",
+      "item": [
+        {
+          "name": "Analyze Resume for Skills",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"careerGoal\": \"Full Stack Developer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/skill-gap/resume/analyze", "host": ["{{baseUrl}}"], "path": ["api", "skill-gap", "resume", "analyze"] }
+          }
+        },
+        {
+          "name": "Analyze Skill Gap",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"careerGoal\": \"Full Stack Developer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/skill-gap/analyze", "host": ["{{baseUrl}}"], "path": ["api", "skill-gap", "analyze"] }
+          }
+        },
+        {
+          "name": "Full Analysis (Resume + GitHub + Skill Gap + Resources)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"careerGoal\": \"Full Stack Developer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/skill-gap/full-analyze", "host": ["{{baseUrl}}"], "path": ["api", "skill-gap", "full-analyze"] }
+          }
+        },
+        {
+          "name": "Get Latest Skill Gap",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/skill-gap/latest", "host": ["{{baseUrl}}"], "path": ["api", "skill-gap", "latest"] }
+          }
+        },
+        {
+          "name": "Get Job Matches",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/skill-gap/job-matches", "host": ["{{baseUrl}}"], "path": ["api", "skill-gap", "job-matches"] }
+          }
+        },
+        {
+          "name": "Get Progress History",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/skill-gap/progress", "host": ["{{baseUrl}}"], "path": ["api", "skill-gap", "progress"] }
+          }
+        },
+        {
+          "name": "Get Career Goals",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/skill-gap/career-goals", "host": ["{{baseUrl}}"], "path": ["api", "skill-gap", "career-goals"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recommendations",
+      "item": [
+        {
+          "name": "Get Recommendations",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/recommendations", "host": ["{{baseUrl}}"], "path": ["api", "recommendations"] }
+          }
+        },
+        {
+          "name": "Get Latest Snapshot",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/recommendations/snapshot", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", "snapshot"] }
+          }
+        },
+        {
+          "name": "Get Feedback History",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/recommendations/history", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", "history"] }
+          }
+        },
+        {
+          "name": "Get Resource Analytics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/recommendations/analytics", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", "analytics"] }
+          }
+        },
+        {
+          "name": "Trigger Full Analysis",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/recommendations/analyze", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", "analyze"] }
+          }
+        },
+        {
+          "name": "Mark Resource Complete",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/recommendations/:id/complete", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", ":id", "complete"] }
+          }
+        },
+        {
+          "name": "Rate Recommendation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"feedback\": \"Very helpful resource\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/recommendations/:id/rate", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", ":id", "rate"] }
+          }
+        },
+        {
+          "name": "Bookmark Recommendation",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/recommendations/:id/bookmark", "host": ["{{baseUrl}}"], "path": ["api", "recommendations", ":id", "bookmark"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roadmap",
+      "item": [
+        {
+          "name": "Generate Roadmap",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"careerGoal\": \"Full Stack Developer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/roadmap/generate", "host": ["{{baseUrl}}"], "path": ["api", "roadmap", "generate"] }
+          }
+        },
+        {
+          "name": "List All Roadmaps",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/roadmap", "host": ["{{baseUrl}}"], "path": ["api", "roadmap"] }
+          }
+        },
+        {
+          "name": "Get Roadmap by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/roadmap/:roadmapId", "host": ["{{baseUrl}}"], "path": ["api", "roadmap", ":roadmapId"] }
+          }
+        },
+        {
+          "name": "Update Phase",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phaseIndex\": 0,\n  \"status\": \"completed\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/roadmap/:roadmapId/phase", "host": ["{{baseUrl}}"], "path": ["api", "roadmap", ":roadmapId", "phase"] }
+          }
+        },
+        {
+          "name": "Delete Roadmap",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/roadmap/:roadmapId", "host": ["{{baseUrl}}"], "path": ["api", "roadmap", ":roadmapId"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chatbot",
+      "item": [
+        {
+          "name": "Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Career Guidance\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/chatbot/sessions", "host": ["{{baseUrl}}"], "path": ["api", "chatbot", "sessions"] }
+          }
+        },
+        {
+          "name": "List Sessions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/chatbot/sessions", "host": ["{{baseUrl}}"], "path": ["api", "chatbot", "sessions"] }
+          }
+        },
+        {
+          "name": "Get Session Messages",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/chatbot/sessions/:sessionId/messages", "host": ["{{baseUrl}}"], "path": ["api", "chatbot", "sessions", ":sessionId", "messages"] }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"<session-id>\",\n  \"content\": \"What skills do I need for Full Stack Developer?\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/chatbot/messages", "host": ["{{baseUrl}}"], "path": ["api", "chatbot", "messages"] }
+          }
+        },
+        {
+          "name": "Delete Session",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/chatbot/sessions/:sessionId", "host": ["{{baseUrl}}"], "path": ["api", "chatbot", "sessions", ":sessionId"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assessment",
+      "item": [
+        {
+          "name": "Submit Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assessmentId\": \"<assessment-id>\",\n  \"answers\": [\n    { \"questionId\": \"q1\", \"answer\": \"A\" },\n    { \"questionId\": \"q2\", \"answer\": \"B\" }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/assessment/submit", "host": ["{{baseUrl}}"], "path": ["api", "assessment", "submit"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Code Execution",
+      "item": [
+        {
+          "name": "Run Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"python\",\n  \"code\": \"print('Hello World')\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/coding/run", "host": ["{{baseUrl}}"], "path": ["api", "coding", "run"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coding Challenge",
+      "item": [
+        {
+          "name": "Get Solution",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challengeId\": \"<challenge-id>\",\n  \"language\": \"python\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/coding/solution", "host": ["{{baseUrl}}"], "path": ["api", "coding", "solution"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Resources",
+      "item": [
+        {
+          "name": "List Resources",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/resources", "host": ["{{baseUrl}}"], "path": ["api", "admin", "resources"] }
+          }
+        },
+        {
+          "name": "Create Resource",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"React Tutorial\",\n  \"url\": \"https://react.dev\",\n  \"type\": \"course\",\n  \"difficulty\": \"beginner\",\n  \"skill\": \"React\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/resources", "host": ["{{baseUrl}}"], "path": ["api", "admin", "resources"] }
+          }
+        },
+        {
+          "name": "Update Resource",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated React Tutorial\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/resources/:id", "host": ["{{baseUrl}}"], "path": ["api", "admin", "resources", ":id"] }
+          }
+        },
+        {
+          "name": "Delete Resource",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/admin/resources/:id", "host": ["{{baseUrl}}"], "path": ["api", "admin", "resources", ":id"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Market",
+      "item": [
+        {
+          "name": "Refresh Market Profiles",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/admin/market/refresh", "host": ["{{baseUrl}}"], "path": ["api", "admin", "market", "refresh"] }
+          }
+        }
+      ]
+    }
+  ]
+}
