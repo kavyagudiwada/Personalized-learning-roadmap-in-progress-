@@ -303,7 +303,7 @@ export default function AssessmentPage() {
           </div>
         </div>
 
-        <LevelQuiz state={state} onLevelComplete={handleLevelComplete} />
+        <LevelQuiz key={state.currentLevel} state={state} onLevelComplete={handleLevelComplete} />
       </div>
     </div>
   );
