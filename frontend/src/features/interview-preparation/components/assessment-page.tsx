@@ -186,7 +186,10 @@ export default function AssessmentPage() {
     if (!state) return;
 
     const level = state.currentLevel;
-    const newLevelScores = [...(state.levelScores || []), { level, correct, total: state.questions.length }];
+    const prevScores = [...(state.levelScores || [])].filter((s) => s.level !== level);
+    const newLevelScores = [...prevScores, { level, correct, total: state.questions.length }].sort(
+      (a, b) => a.level - b.level
+    );
     const newAllAnswers = { ...(state.allAnswers || {}), [`Level ${level}`]: answers };
 
     if (level >= state.totalLevels) {

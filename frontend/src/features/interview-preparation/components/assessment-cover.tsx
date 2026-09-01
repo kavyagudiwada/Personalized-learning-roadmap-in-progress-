@@ -165,6 +165,7 @@ export default function AssessmentCover() {
   const navigate = useNavigate();
 
   const startQuiz = (topic: string) => {
+    localStorage.removeItem("assessment_data");
     const questions = getQuestions(topic, 1);
     const assessmentData = {
       assessmentId: `local-${Date.now()}`,
@@ -180,11 +181,7 @@ export default function AssessmentCover() {
   };
 
   const handleStart = () => {
-    const existing = localStorage.getItem("assessment_data");
-    if (existing) {
-      navigate({ to: "/quiz" });
-      return;
-    }
+    localStorage.removeItem("assessment_data");
     const careerGoal = localStorage.getItem("learnflow_career_goal") || "";
     const topic = getTopicForGoal(careerGoal) || "Frontend";
     startQuiz(topic);
